@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS projects(id text PRIMARY KEY, name text NOT NULL, memo text);
+CREATE TABLE IF NOT EXISTS target_posts(id text PRIMARY KEY, project_id text REFERENCES projects(id), payload jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS jobs(id text PRIMARY KEY, target_post_id text REFERENCES target_posts(id), status text NOT NULL DEFAULT 'queued', stage text NOT NULL DEFAULT 'engagements', progress integer NOT NULL DEFAULT 0, reference_at timestamptz NOT NULL, settings jsonb NOT NULL, provider text NOT NULL, model text NOT NULL, prompt_version text NOT NULL, estimate jsonb NOT NULL, cost numeric NOT NULL DEFAULT 0, cost_unknown boolean NOT NULL DEFAULT false, input_tokens bigint NOT NULL DEFAULT 0, output_tokens bigint NOT NULL DEFAULT 0, error text, lease_until timestamptz, retries integer NOT NULL DEFAULT 0, next_attempt timestamptz NOT NULL DEFAULT now(), created_at timestamptz NOT NULL DEFAULT now(), completed_at timestamptz);
+CREATE TABLE IF NOT EXISTS job_tasks(job_id text REFERENCES jobs(id) ON DELETE CASCADE, kind text NOT NULL, cursor text, done boolean NOT NULL DEFAULT false, PRIMARY KEY(job_id,kind));
+CREATE TABLE IF NOT EXISTS engagements(job_id text REFERENCES jobs(id) ON DELETE CASCADE, id text NOT NULL, user_id text NOT NULL, type text NOT NULL, payload jsonb NOT NULL, PRIMARY KEY(job_id,id));
+CREATE INDEX IF NOT EXISTS engagements_user ON engagements(job_id,user_id);
+CREATE TABLE IF NOT EXISTS sns_users(job_id text REFERENCES jobs(id) ON DELETE CASCADE, user_id text NOT NULL, payload jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(job_id,user_id));
+CREATE TABLE IF NOT EXISTS user_posts(job_id text REFERENCES jobs(id) ON DELETE CASCADE, user_id text NOT NULL, post_id text NOT NULL, payload jsonb NOT NULL, PRIMARY KEY(job_id,user_id,post_id));
+CREATE TABLE IF NOT EXISTS user_analyses(id text PRIMARY KEY, user_id text NOT NULL, cache_key text NOT NULL, payload jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS analyses_cache ON user_analyses(user_id,cache_key,created_at);
+CREATE TABLE IF NOT EXISTS job_user_analyses(job_id text REFERENCES jobs(id) ON DELETE CASCADE, user_id text NOT NULL, analysis_id text REFERENCES user_analyses(id), PRIMARY KEY(job_id,user_id));
+CREATE TABLE IF NOT EXISTS aggregates(job_id text PRIMARY KEY REFERENCES jobs(id) ON DELETE CASCADE, payload jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS provider_runs(job_id text REFERENCES jobs(id) ON DELETE CASCADE, key text NOT NULL, run_id text NOT NULL, payload jsonb, PRIMARY KEY(job_id,key));
+CREATE TABLE IF NOT EXISTS raw_payloads(job_id text REFERENCES jobs(id) ON DELETE CASCADE, kind text NOT NULL, key text NOT NULL, payload jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(job_id,kind,key));
+CREATE TABLE IF NOT EXISTS categories(name text PRIMARY KEY, guidance text NOT NULL, enabled boolean NOT NULL DEFAULT true);
+CREATE TABLE IF NOT EXISTS settings(id text PRIMARY KEY, payload jsonb NOT NULL);
+
+-- Purpose-based influencer discovery. Additive migration; existing analysis data stays intact.
+CREATE TABLE IF NOT EXISTS discovery_jobs(id text PRIMARY KEY, status text NOT NULL DEFAULT 'queued', plan jsonb NOT NULL, provider text NOT NULL, reference_at timestamptz NOT NULL DEFAULT now(), budget_yen integer NOT NULL DEFAULT 3000 CHECK(budget_yen BETWEEN 0 AND 3000), spent_yen integer NOT NULL DEFAULT 0 CHECK(spent_yen>=0), reserved_yen integer NOT NULL DEFAULT 0 CHECK(reserved_yen>=0), progress integer NOT NULL DEFAULT 0, targets jsonb, report jsonb, error text, lease_until timestamptz, retries integer NOT NULL DEFAULT 0, next_attempt timestamptz NOT NULL DEFAULT now(), created_at timestamptz NOT NULL DEFAULT now(), completed_at timestamptz);
+CREATE TABLE IF NOT EXISTS discovery_candidates(job_id text REFERENCES discovery_jobs(id) ON DELETE CASCADE, username text NOT NULL, candidate jsonb NOT NULL, assessment jsonb NOT NULL, PRIMARY KEY(job_id,username));
+CREATE TABLE IF NOT EXISTS discovery_charges(job_id text REFERENCES discovery_jobs(id) ON DELETE CASCADE, key text NOT NULL, ceiling_yen integer NOT NULL, actual_yen integer, provider_run_id text, state text NOT NULL DEFAULT 'reserved', PRIMARY KEY(job_id,key));
