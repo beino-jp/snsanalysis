@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "p0": "tsx scripts/compare-actors.ts",
-    "connections:check": "node scripts/check-connections.mjs"
+    "connections:check": "node scripts/check-connections.mjs",
+    "p0:probe": "node scripts/probe-instagram.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
