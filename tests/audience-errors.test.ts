@@ -12,5 +12,5 @@ it('reports only safe status and schema paths without provider messages or value
 it('uses a strict structured schema with explicit fields for AI analysis',()=>{
  const format=zodResponseFormat(audiencePerson,'audience_person');
  expect(format.type).toBe('json_schema');expect(format.json_schema.strict).toBe(true);
- expect(format.json_schema.schema.required).toContain('gender');
+ expect(format.json_schema.schema?.required).toContain('gender');
 });
