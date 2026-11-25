@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Loader2,
 } from "lucide-react";
+import {audienceCounts} from "@/domain/audience";
 import type { ValidationReport } from "@/domain/validation-report";
 type Entry = { id: string; payload: ValidationReport; created_at: string };
 const number = (n: number) => n.toLocaleString("ja-JP");
@@ -168,7 +169,22 @@ export default function ValidationReports() {
               </section>
             ))}
           </div>
-          {report.comments && <section className="panel validation-details">
+          {report.audience && <section className="panel validation-details">
+            <h2>どんな層に届いたか</h2>
+            <p>分析対象 {report.audience.people.length}人／コメント取得者 {report.uniqueCommenters}人。投稿全体・いいねユーザー全体を代表する調査ではありません。</p>
+            <h3>性別・年代</h3>
+            {(['gender','age'] as const).map(field=><p key={field}>{field==='gender'?'性別':'年代'}：{Object.entries(audienceCounts(report.audience!.people,field)).map(([k,n])=>`${k} ${n}人`).join(' ／ ')}</p>)}
+            <h3>関心・どんな人か</h3>
+            {report.audience.people.map((p,i)=><article key={i} style={{padding:"16px 0",borderBottom:"1px solid #e2e8f0"}}>
+              <strong>対象者 {i+1} · {p.gender.value}／{p.age.value}</strong>
+              <p>{p.description}</p>
+              <p className="form-hint">性別の根拠：{p.gender.reason} ／ 年代の根拠：{p.age.reason}</p>
+              {p.interests.map((f,j)=><p key={j}><strong>{f.value}</strong>（確信度 {Math.round(f.confidence*100)}%） · {f.reason}<br/>根拠：「{f.evidence.join('」「')}」</p>)}
+              {p.age.value!=='10代' && <a href={`https://www.instagram.com/${p.username}/`} target="_blank" rel="noopener noreferrer">プロフィールで確認 ↗</a>}
+            </article>)}
+            <p className="form-hint">自己紹介・取得できた公開投稿テキストに基づく推定です。非公開・根拠不足は不明。名前や見た目で性別・年代を補いません。</p>
+          </section>}
+          {!report.audience && report.comments && <section className="panel validation-details">
             <h2>取得したコメント</h2>
             <p className="form-hint">公開コメントの原文です。属性・選定理由のAI判定は未実施です。リンク先はInstagramです。</p>
             {report.comments.map((c, i) => <article key={i} style={{borderBottom:"1px solid #e2e8f0",padding:"16px 0"}}>
@@ -186,9 +202,9 @@ export default function ValidationReports() {
                   timeZone: "Asia/Tokyo",
                 })}
               </dd>
-              <dt>APIが返した利用料</dt>
+              <dt>投稿・コメント取得の利用料</dt>
               <dd>
-                ${report.costUsd.toFixed(4)}（最終請求はApifyのBillingで確認）
+                ${report.costUsd.toFixed(4)}（プロフィール取得・AI分析費は含みません。最終請求は各サービスで確認）
               </dd>
               <dt>外部保存先</dt>
               <dd>

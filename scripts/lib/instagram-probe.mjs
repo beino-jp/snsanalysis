@@ -73,8 +73,8 @@ export function validateBuild(build, step) {
   const schema = JSON.parse(build.inputSchema ?? "{}");
   const props = schema.properties ?? {};
   if (
-    !props.directUrls ||
-    !props.resultsLimit ||
+    (step.key === "profiles" ? !props.usernames : !props.directUrls) ||
+    (step.key !== "profiles" && !props.resultsLimit) ||
     (step.key === "post" && !props.resultsType?.enum?.includes("details")) ||
     (step.key === "comments" && !props.includeNestedComments)
   )
@@ -82,6 +82,10 @@ export function validateBuild(build, step) {
   return build.buildNumber;
 }
 export function summarize(items, key) {
+  if (key === "profiles") {
+    if (items.some(p => !p.username || p.error)) throw Error("プロフィール出力形式が不正です");
+    return {profileRecords:items.length};
+  }
   if (key === "post") {
     const p = items[0];
     if (

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const input = JSON.parse(text);
     const report = parseValidationReport(input.journal, input.url);
     const id = createHash("sha256")
-      .update(report.url + "|" + report.startedAt)
+      .update(report.url + "|" + report.startedAt + "|" + (report.audience?.analyzedAt ?? ""))
       .digest("hex");
     await query(
       "INSERT INTO validation_reports(id,payload) VALUES($1,$2) ON CONFLICT DO NOTHING",
