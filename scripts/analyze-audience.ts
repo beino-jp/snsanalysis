@@ -7,6 +7,7 @@ import {executeProbe} from './lib/instagram-probe.mjs';
 import {parseValidationReport} from '../src/domain/validation-report';
 import {groundPerson,audiencePerson} from '../src/domain/audience';
 import {zodResponseFormat} from 'openai/helpers/zod';
+import {recoveryBudget} from './lib/audience-recovery';
 import {safeAudienceError} from './lib/audience-errors';
 let phase='input';
 let checkpoint:any;
@@ -35,9 +36,18 @@ try {
    await rename(output,output+'.preflight-'+Date.now()+'.json');
  }
  const resume=args.includes('--resume-analysis');
- if(!resume){const lock=await open(output,'wx',0o600);await lock.close();}
- const state:any=resume?JSON.parse(await readFile(output,'utf8')):{...journal,status:'created',runs:[],audience:{version:1,source:'public-profile-text',analyzedAt:new Date().toISOString(),people:[]}};
+ const recover=args.includes('--recover-missing-inputs');
+ if(resume && recover)throw Error('実行モードは1つだけ指定してください');
+ if(!resume && !recover){const lock=await open(output,'wx',0o600);await lock.close();}
+ const state:any=(resume||recover)?JSON.parse(await readFile(output,'utf8')):{...journal,status:'created',runs:[],audience:{version:1,source:'public-profile-text',analyzedAt:new Date().toISOString(),people:[]}};
  const save=async()=>{const tmp=output+'.tmp';await writeFile(tmp,JSON.stringify(state,null,2),{mode:0o600});await rename(tmp,output);};
+ let profileCap=0.1;
+ if(recover){
+   const recovery=recoveryBudget(state);profileCap=recovery.remaining;
+   await writeFile(output+'.before-recovery-'+Date.now()+'.json',JSON.stringify(state,null,2),{mode:0o600,flag:'wx'});
+   state.priorProfileRuns=recovery.priorRuns;state.runs=[];state.status='created';
+   console.log('不足しているプロフィール入力を再取得します。前回分と合わせたApify上限$0.10を維持します。');
+ }
  checkpoint=state;checkpointSave=save;
  if(resume && (state.status!=='analyzing' || !Array.isArray(state.profileInputs))) throw Error('PROFILE_INPUTS_MISSING');
  await save();
@@ -45,8 +55,8 @@ try {
  if(!resume){
  phase='provider_preflight';
  await executeProbe(new ApifyClient({token:process.env.APIFY_TOKEN,maxRetries:0}),{
- maxChargeUsd:0.1,conversionCeiling:200,feesMultiplier:1.5,budgetYen:300,
- steps:[{key:'profiles',actor:'apify/instagram-profile-scraper',limit:names.length,cap:0.1,input:{usernames:names,includeAboutSection:false}}]
+ maxChargeUsd:profileCap,conversionCeiling:200,feesMultiplier:1.5,budgetYen:300,
+ steps:[{key:'profiles',actor:'apify/instagram-profile-scraper',limit:names.length,cap:profileCap,input:{usernames:names,includeAboutSection:false}}]
  },state,save,async (_:string,items:any[])=>{
    profiles.push(...items.map(p=>({username:p.username,private:!!(p.private||p.isPrivate),biography:String(p.biography??'').slice(0,1500),latestPosts:(p.latestPosts??[]).slice(0,20).map((p:any)=>({caption:String(p.caption??'').slice(0,400)}))})));
    state.profileInputs=profiles;await save();
@@ -72,6 +82,7 @@ try {
    state.pendingResponse={username,result};await save();
   }
   state.audience.people.push(groundPerson(result,username,texts,!!(p?.private || p?.isPrivate)));delete state.pendingResponse;await save();
+  console.log(`属性分析：${state.audience.people.length}/${names.length}人 完了`);
  }
  // Restore the original verified acquisition journal; keep profile audit separately.
  state.profileRuns=state.runs;state.runs=journal.runs;state.status='completed';await save();
