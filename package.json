@@ -11,7 +11,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "p0": "tsx scripts/compare-actors.ts"
+    "p0": "tsx scripts/compare-actors.ts",
+    "connections:check": "node scripts/check-connections.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
