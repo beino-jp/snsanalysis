@@ -3,7 +3,7 @@ import {ApifyClient} from 'apify-client';
 import {validatePricing,validateBuild} from './lib/instagram-probe.mjs';
 // Read-only metadata inspection. Never starts an Actor or sends profile data.
 const client=new ApifyClient({token:process.env.APIFY_TOKEN,maxRetries:0});
-const step={key:'profiles',limit:15,cap:0.1};
+const step={key:'profiles',limit:15,cap:0.1,input:{includeAboutSection:false}};
 try{
  const actor=await client.actor('apify/instagram-profile-scraper').get();
  console.log('Actor情報：取得成功');

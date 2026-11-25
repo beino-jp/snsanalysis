@@ -165,3 +165,13 @@ it("does not start a second paid step when deletion fails", async () => {
   expect(fake.start).toHaveBeenCalledTimes(1);
   expect(journal.status).toBe("manual_check_required");
 });
+
+it('accepts only the known profile fee with the optional About fee explicitly disabled', () => {
+ const actor={pricingInfos:[{startedAt:'2026-01-01',pricingModel:'PAY_PER_EVENT',pricingPerEvent:{actorChargeEvents:{profile:{eventPriceUsd:0.0026},'about-account':{eventPriceUsd:0.007}}}}]};
+ const step={key:'profiles',limit:15,cap:0.1,input:{includeAboutSection:false}};
+ expect(()=>validatePricing(actor,step)).not.toThrow();
+ expect(()=>validatePricing(actor,{...step,input:{includeAboutSection:true}})).toThrow();
+ expect(()=>validatePricing(actor,{...step,limit:100})).toThrow();
+ const unknown=structuredClone(actor);Object.assign(unknown.pricingInfos[0].pricingPerEvent.actorChargeEvents,{unexpected:{eventPriceUsd:0.01}});
+ expect(()=>validatePricing(unknown,step)).toThrow();
+});

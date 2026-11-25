@@ -52,7 +52,12 @@ export function validatePricing(actor, step, now = Date.now()) {
     Number(info.minimalMaxTotalChargeUsd ?? 0) > step.cap
   )
     throw Error("料金方式または課金上限の最低設定額が変わったため停止");
-  const events = Object.values(info.pricingPerEvent?.actorChargeEvents ?? {});
+  const entries = info.pricingPerEvent?.actorChargeEvents ?? {};
+  const profileOnly = step.key === "profiles" && step.input?.includeAboutSection === false;
+  const keys = Object.keys(entries);
+  if (profileOnly && (keys.length !== 2 || !keys.includes("profile") || !keys.includes("about-account")))
+    throw Error("プロフィールの課金項目が既知の仕様と一致しません");
+  const events = profileOnly ? [entries.profile] : Object.values(entries);
   if (events.length !== 1) throw Error("追加課金項目があるため停止");
   const prices = events.flatMap((e) =>
     e.eventPriceUsd !== undefined
@@ -73,7 +78,7 @@ export function validateBuild(build, step) {
   const schema = JSON.parse(build.inputSchema ?? "{}");
   const props = schema.properties ?? {};
   if (
-    (step.key === "profiles" ? !props.usernames : !props.directUrls) ||
+    (step.key === "profiles" ? (!props.usernames || props.includeAboutSection?.type !== "boolean" || step.input?.includeAboutSection !== false) : !props.directUrls) ||
     (step.key !== "profiles" && !props.resultsLimit) ||
     (step.key === "post" && !props.resultsType?.enum?.includes("details")) ||
     (step.key === "comments" && !props.includeNestedComments)

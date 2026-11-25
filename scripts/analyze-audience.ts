@@ -1,7 +1,8 @@
 import 'dotenv/config';
-import {readFile,open,writeFile} from 'node:fs/promises';
+import {readFile,open,writeFile,rename} from 'node:fs/promises';
 import {ApifyClient} from 'apify-client';
 import OpenAI from 'openai';
+import {unlinkSync} from 'node:fs';
 import {executeProbe} from './lib/instagram-probe.mjs';
 import {parseValidationReport} from '../src/domain/validation-report';
 import {groundPerson} from '../src/domain/audience';
@@ -21,6 +22,14 @@ try {
  const inputRate=Number(process.env.OPENAI_INPUT_USD_PER_MILLION),outputRate=Number(process.env.OPENAI_OUTPUT_USD_PER_MILLION);
  if(!(inputRate>0 && outputRate>0) || (150000*inputRate+names.length*1600*outputRate)/1e6*300+30>300) throw Error('料金設定が未確認または予算超過');
  const output=file.replace('comments-','audience-');
+ const operation=output+'.operation-lock';
+ const operationHandle=await open(operation,'wx',0o600);await operationHandle.close();
+ process.once('exit',()=>{try{unlinkSync(operation);}catch{}});
+ if(args.includes('--resume-preflight')){
+   const old=JSON.parse(await readFile(output,'utf8'));
+   if(old.status!=='created' || !Array.isArray(old.runs) || old.runs.length!==0 || old.audience?.people?.length!==0) throw Error('事前確認のみの記録ではありません');
+   await rename(output,output+'.preflight-'+Date.now()+'.json');
+ }
  const lock=await open(output,'wx',0o600);await lock.close();
  const state:any={...journal,status:'created',runs:[],audience:{version:1,source:'public-profile-text',analyzedAt:new Date().toISOString(),people:[]}};
  const save=()=>writeFile(output,JSON.stringify(state,null,2),{mode:0o600});
@@ -29,7 +38,7 @@ try {
  phase='provider_preflight';
  await executeProbe(new ApifyClient({token:process.env.APIFY_TOKEN,maxRetries:0}),{
  maxChargeUsd:0.1,conversionCeiling:200,feesMultiplier:1.5,budgetYen:300,
- steps:[{key:'profiles',actor:'apify/instagram-profile-scraper',limit:names.length,cap:0.1,input:{usernames:names}}]
+ steps:[{key:'profiles',actor:'apify/instagram-profile-scraper',limit:names.length,cap:0.1,input:{usernames:names,includeAboutSection:false}}]
  },state,save,async (_:string,items:any[])=>{profiles.push(...items);});
  phase='ai_analysis';
  state.status='analyzing';await save();
