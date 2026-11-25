@@ -150,3 +150,7 @@ cd snsanalysis
 ```
 
 以後の変更は作業ブランチへcommit/pushして、Pull Requestで確認します。CIはPostgreSQLを使ったテスト・型チェック・ビルドを実行します。ローカルの環境変数・保存データはGit管理しません。
+
+## 作業再開
+
+現在の検証結果と次の手順は [docs/RESUME.md](docs/RESUME.md)、情報不足への対策は [docs/DATA-GAPS.md](docs/DATA-GAPS.md) を参照してください。
