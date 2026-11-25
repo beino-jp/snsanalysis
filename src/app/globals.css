@@ -3544,3 +3544,97 @@ label input,
     font-size: 12px;
   }
 }
+.validation-import {
+  padding: 25px;
+  margin-bottom: 24px;
+}
+.validation-import h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.validation-import label {
+  margin-top: 18px;
+  max-width: 700px;
+}
+.validation-import input[type="file"] {
+  font-size: 14px;
+  padding: 12px;
+  background: #f7f9fc;
+}
+.validation-selection {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 22px 0;
+}
+.validation-selection label {
+  margin: 0;
+  font-size: 14px;
+}
+.validation-selection .select {
+  display: block;
+  margin-top: 7px;
+  max-width: 100%;
+}
+.validation-selection a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+.validation-details {
+  padding: 25px;
+}
+.validation-details dl {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 16px;
+  margin: 23px 0;
+  font-size: 14px;
+}
+.validation-details dt {
+  color: #63778d;
+}
+.validation-details dd {
+  margin: 0;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  line-height: 1.8;
+}
+.validation-page .error {
+  font-size: 14px;
+  line-height: 1.8;
+}
+@media (max-width: 760px) {
+  .sidebar nav {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .nav-item {
+    font-size: 10px;
+    overflow-wrap: anywhere;
+  }
+  .validation-details dl {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .validation-details dd {
+    margin-bottom: 12px;
+  }
+  .validation-selection {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .validation-import,
+  .validation-details {
+    padding: 18px;
+  }
+  .validation-selection label {
+    width: 100%;
+  }
+  .validation-selection .select {
+    width: 100%;
+  }
+}

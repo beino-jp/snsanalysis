@@ -32,6 +32,9 @@ export async function deleteExpiredJob(id: string) {
 }
 export async function cleanupExpired() {
   await query(
+    "DELETE FROM validation_reports WHERE created_at<now()-interval '90 days'",
+  );
+  await query(
     "DELETE FROM discovery_jobs WHERE created_at<now()-interval '90 days'",
   );
   const expired = await query(

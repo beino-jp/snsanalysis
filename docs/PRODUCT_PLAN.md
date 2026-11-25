@@ -23,8 +23,8 @@
 ## アカウントの準備状況
 
 - GitHub：リポジトリあり。
-- OpenAI：既存アカウントあり。専用Project・キーは準備予定。
-- Supabase・Apify：未作成。
+- OpenAI：専用Project・キーを作成済み。Macで疎通確認済み。
+- Supabase・Apify：アカウント作成済み。ApifyはMacで投稿情報と少量コメントの取得を確認済み。
 - ドメイン・本番サーバー：未契約。
 
 ## 構成案（サービス選定・契約は未確定）
@@ -88,3 +88,7 @@ VPSのOS更新、TLS、ファイアウォール、監視、バックアップを
 READMEで起動し、REQUIREMENTS.md・docs/CAMPAIGNS.md・docs/P0.mdを読む。
 モックで完成している部分と、本番API・認証・予算管理の未接続部分を混同しない。
 GitHubへ公開するのはソース・架空データ・設計資料のみ。.env・実データ・APIキー・会話原文は含めない。
+
+## 先方によるテストの目標
+
+今回の実データ検証後、共有開発環境で先方が試せる状態まで実装を進める。手順と公開前の受け入れ条件は [TEST-ENVIRONMENT.md](TEST-ENVIRONMENT.md) を参照。

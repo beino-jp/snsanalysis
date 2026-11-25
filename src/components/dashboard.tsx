@@ -45,6 +45,7 @@ import { DEMO_URL } from "@/fixtures/demo";
 import { Group, percent } from "@/domain/aggregation";
 import AnalyzedUsers from "./analyzed-users";
 import CampaignDiscovery from "./campaign-discovery";
+import ValidationReports from "./validation-reports";
 import type { AnalyzedUser } from "@/domain/analyzed-users";
 type Estimate = {
   target: { owner: string; likes: number; comments: number; caption: string };
@@ -256,17 +257,19 @@ export default function Dashboard() {
         .includes(query.toLowerCase()),
   );
   const title =
-    page === "discovery"
-      ? "目的から候補を探す"
-      : page === "settings"
-        ? "分析設定"
-        : page === "privacy"
-          ? "データとプライバシー"
-          : page === "jobs"
-            ? "案件・ジョブ一覧"
-            : page === "result"
-              ? "分析結果"
-              : "ダッシュボード";
+    page === "live"
+      ? "実データの取得記録"
+      : page === "discovery"
+        ? "目的から候補を探す"
+        : page === "settings"
+          ? "分析設定"
+          : page === "privacy"
+            ? "データとプライバシー"
+            : page === "jobs"
+              ? "案件・ジョブ一覧"
+              : page === "result"
+                ? "分析結果"
+                : "ダッシュボード";
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -305,6 +308,14 @@ export default function Dashboard() {
           >
             <Search size={19} />
             <span>候補を探す</span>
+          </button>
+          <button
+            className={"nav-item " + (page === "live" ? "active" : "")}
+            onClick={() => navigate("live")}
+            title="実データの取得記録"
+          >
+            <Database size={19} />
+            <span>実データの取得記録</span>
           </button>
           <button
             className={"nav-item " + (page === "settings" ? "active" : "")}
@@ -354,7 +365,7 @@ export default function Dashboard() {
           </div>
           <div className="topbar-right">
             <span className="pill">
-              <span>MOCK MODE</span>
+              <span>{page === "live" ? "取得記録" : "MOCK MODE"}</span>
             </span>
             <span className="small">Instagram MVP</span>
             <div className="user-avatar">RI</div>
@@ -380,7 +391,9 @@ export default function Dashboard() {
               </button>
             </div>
           )}
-          {page === "discovery" ? (
+          {page === "live" ? (
+            <ValidationReports />
+          ) : page === "discovery" ? (
             <CampaignDiscovery jobs={jobs} />
           ) : page === "result" && selected ? (
             <Result
