@@ -119,7 +119,7 @@ export function summarize(items, key) {
     ).size,
   };
 }
-export async function executeProbe(client, plan, journal, save) {
+export async function executeProbe(client, plan, journal, save, onItems) {
   if (
     plan.maxChargeUsd * plan.conversionCeiling * plan.feesMultiplier >
     plan.budgetYen
@@ -183,6 +183,7 @@ export async function executeProbe(client, plan, journal, save) {
       if (page.total > step.limit)
         throw Error("取得件数が上限を超えたため停止");
       entry.summary = summarize(page.items, step.key);
+      if (onItems) await onItems(step.key, page.items);
       entry.status = "verified";
     } finally {
       if (!run) {

@@ -33,8 +33,8 @@ export default function ValidationReports() {
     setBusy(true);
     setError("");
     try {
-      if (file.size > 65536)
-        throw Error("JSONファイルは64KB以下にしてください");
+      if (file.size > 262144)
+        throw Error("JSONファイルは256KB以下にしてください");
       const journal = JSON.parse(await file.text());
       const r = await fetch("/api/validation-reports", {
         method: "POST",
@@ -70,7 +70,7 @@ export default function ValidationReports() {
       <div className="demo-banner">
         <Info size={18} />
         <div>
-          ここではモックの属性・ユーザーを混ぜません。以前のテストで残った集計記録のみを読み込み、再取得・API課金は行いません。
+          ここではモックの属性・ユーザーを混ぜません。ローカルに保存した取得記録を読み込み、再取得・API課金は行いません。
         </div>
       </div>
       <form className="panel validation-import" onSubmit={upload}>
@@ -80,7 +80,7 @@ export default function ValidationReports() {
         </h2>
         <p className="form-hint">
           対象はアプリ内の .p0-results/probe-投稿ID.json
-          です。本文やユーザー名を含まない検証記録だけを取り込みます。
+          です。明細保存を指定した新しいテストでは、コメント本文とユーザー名も取り込めます。
         </p>
         <label>
           検証したInstagram投稿URL
@@ -168,6 +168,15 @@ export default function ValidationReports() {
               </section>
             ))}
           </div>
+          {report.comments && <section className="panel validation-details">
+            <h2>取得したコメント</h2>
+            <p className="form-hint">公開コメントの原文です。属性・選定理由のAI判定は未実施です。リンク先はInstagramです。</p>
+            {report.comments.map((c, i) => <article key={i} style={{borderBottom:"1px solid #e2e8f0",padding:"16px 0"}}>
+              {c.profileUrl ? <a href={c.profileUrl} target="_blank" rel="noopener noreferrer">@{c.username} ↗</a> : <strong>ユーザー名未取得</strong>}
+              <p style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>{c.text}</p>
+              <span className="muted">属性・選定理由：未判定</span>
+            </article>)}
+          </section>}
           <section className="panel validation-details">
             <h2>取得・保存の状況</h2>
             <dl>
@@ -189,7 +198,7 @@ export default function ValidationReports() {
               <dt>属性判定</dt>
               <dd>未実施 — 性別・年代・関心を推測で補いません</dd>
               <dt>コメント本文・ユーザー明細</dt>
-              <dd>以前のテストでは保存せず削除したため、ここにはありません</dd>
+              <dd>{report.comments ? `${report.comments.length}件を保存。プロフィール詳細・属性は未取得です` : "以前のテストでは保存せず削除したため、ここにはありません"}</dd>
             </dl>
             <p className="error">
               これは一部取得の検証結果です。返信は取得対象外です。投稿者本人の除外と属性判定は未実施のため、属性集計用の人数とは異なります。

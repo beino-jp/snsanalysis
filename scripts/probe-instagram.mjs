@@ -19,6 +19,7 @@ try {
         conservativeYen: Math.ceil(
           plan.maxChargeUsd * plan.conversionCeiling * plan.feesMultiplier,
         ),
+        retainComments: args.includes("--retain-comments"),
         note: "無料プランではコメント15件に制限される場合があります。いいね一覧・属性判定・OpenAI呼び出しは行いません。",
       },
       null,
@@ -31,7 +32,8 @@ try {
   }
   if (!process.env.APIFY_TOKEN?.trim()) throw Error("APIFY_TOKENが未設定です");
   await mkdir(".p0-results", { recursive: true, mode: 0o700 });
-  const file = `.p0-results/probe-${plan.shortcode}.json`;
+  const retain = args.includes("--retain-comments");
+  const file = `.p0-results/${retain ? "comments" : "probe"}-${plan.shortcode}.json`;
   // Exclusive file creation prevents double charging from repeated commands or two terminals.
   const handle = await open(file, "wx", 0o600).catch(() => {
     throw Error(
@@ -55,6 +57,12 @@ try {
       plan,
       journal,
       save,
+      retain ? async (key, items) => {
+        if (key === "comments") {
+          journal.comments = items.map(p => ({username: p.ownerUsername ?? p.owner?.username ?? null, text: p.text.slice(0, 4000)}));
+          await save();
+        }
+      } : undefined,
     );
   } catch {
     if (journal.status !== "manual_check_required") journal.status = "stopped";
@@ -64,9 +72,9 @@ try {
     );
   }
   console.log(
-    "実取得と外部保存先の削除を確認しました。結果は件数・費用のみです。",
+    "実取得と外部保存先の削除を確認しました。明細保存を指定した場合、コメントはローカルJSONに含まれます。",
   );
-  console.log(JSON.stringify(journal, null, 2));
+  console.log(JSON.stringify({...journal, comments: journal.comments ? "ローカルファイルに保存（画面出力なし）" : undefined}, null, 2));
 } catch (e) {
   console.error(e instanceof Error ? e.message : "検証を停止しました");
   process.exitCode = 1;

@@ -29,3 +29,11 @@ it('rejects unrelated links and preserves an unknown ratio for zero displayed co
  const f=fixture(); f.runs[0].summary.displayedComments=0;
  expect(parseValidationReport(f,url).commentAcquisition).toBeNull();
 });
+it('retains only bounded comments and builds safe profile links',()=>{
+ const f={...fixture(),comments:Array.from({length:15},()=>({username:'example_user',text:'公開コメント',secret:'discard'}))};
+ const report=parseValidationReport(f,url);
+ expect(report.comments?.[0].profileUrl).toBe('https://www.instagram.com/example_user/');
+ expect(JSON.stringify(report)).not.toContain('discard');
+ expect(()=>parseValidationReport({...f,comments:[{username:'javascript:alert(1)',text:'x'}]},url)).toThrow();
+ expect(()=>parseValidationReport({...f,comments:[]},url)).toThrow();
+});

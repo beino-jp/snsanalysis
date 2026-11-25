@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
   try {
     await requireMutation();
     const text = await req.text();
-    if (Buffer.byteLength(text) > 65536)
+    if (Buffer.byteLength(text) > 262144)
       return NextResponse.json(
-        { error: "ファイルは64KB以下にしてください" },
+        { error: "ファイルは256KB以下にしてください" },
         { status: 413 },
       );
     const input = JSON.parse(text);

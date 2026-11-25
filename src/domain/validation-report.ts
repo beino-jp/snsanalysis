@@ -27,6 +27,7 @@ const comments = z.object({
 const journal = z.object({
   status: z.literal("completed"),
   startedAt: z.string().datetime(),
+  comments: z.array(z.object({username: z.string().regex(/^[A-Za-z0-9_.]{1,30}$/).nullable(), text: z.string().max(4000)})).max(20).optional(),
   runs: z.array(z.discriminatedUnion("key", [post, comments])).length(2),
 });
 export type ValidationReport = ReturnType<typeof parseValidationReport>;
@@ -47,6 +48,7 @@ export function parseValidationReport(raw: unknown, url: string) {
     throw Error("投稿情報とコメントの完了記録が必要です");
   if (c.summary.uniqueCommenters > c.summary.commentRecords)
     throw Error("ユニーク人数が取得件数を超えています");
+  if (data.comments && data.comments.length !== c.summary.commentRecords) throw Error("コメント件数が記録と一致しません");
   const cost = data.runs.reduce((n, r) => n + r.costUsd, 0);
   if (cost > 0.10000001) throw Error("検証の課金枠を超えています");
   return {
@@ -60,6 +62,7 @@ export function parseValidationReport(raw: unknown, url: string) {
       p.summary.displayedComments > 0
         ? c.summary.commentRecords / p.summary.displayedComments
         : null,
+    comments: data.comments?.map(c => ({...c, profileUrl: c.username ? `https://www.instagram.com/${c.username}/` : null})),
     costUsd: cost,
     cleanup: "deleted" as const,
     source: "local-probe-upload" as const,
