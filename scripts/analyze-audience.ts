@@ -5,6 +5,7 @@ import OpenAI from 'openai';
 import {executeProbe} from './lib/instagram-probe.mjs';
 import {parseValidationReport} from '../src/domain/validation-report';
 import {groundPerson} from '../src/domain/audience';
+let phase='input';
 const args=process.argv.slice(2),file=args[args.indexOf('--file')+1];
 try {
  if(!args.includes('--file') || !file || !/^\.p0-results\/comments-[\w-]+\.json$/.test(file)) throw Error('取得済みcommentsファイルを指定してください');
@@ -25,10 +26,12 @@ try {
  const save=()=>writeFile(output,JSON.stringify(state,null,2),{mode:0o600});
  await save();
  const profiles:any[]=[];
+ phase='provider_preflight';
  await executeProbe(new ApifyClient({token:process.env.APIFY_TOKEN,maxRetries:0}),{
  maxChargeUsd:0.1,conversionCeiling:200,feesMultiplier:1.5,budgetYen:300,
  steps:[{key:'profiles',actor:'apify/instagram-profile-scraper',limit:names.length,cap:0.1,input:{usernames:names}}]
  },state,save,async (_:string,items:any[])=>{profiles.push(...items);});
+ phase='ai_analysis';
  state.status='analyzing';await save();
  const client=new OpenAI({apiKey:process.env.OPENAI_API_KEY,maxRetries:0,timeout:60000});
  for(const username of names){
@@ -49,4 +52,4 @@ try {
  // Restore the original verified acquisition journal; keep profile audit separately.
  state.profileRuns=state.runs;state.runs=journal.runs;state.status='completed';await save();
  console.log(`分析完了。${output} をアプリで読み込んでください。本文・属性はターミナルに出力しません。`);
-}catch{console.error('停止しました。自動再実行しないでください。既存のaudienceファイルとApify Runsを確認してください。');process.exitCode=1;}
+}catch(e){console.error('停止した段階：'+phase);console.error('診断コード：'+(e instanceof Error && e.message==='追加課金項目があるため停止'?'PRICING_EVENTS_UNSUPPORTED':e instanceof Error && e.message==='Actor入力仕様が変わったため停止'?'ACTOR_SCHEMA_MISMATCH':'CHECK_REQUIRED'));console.error('停止しました。自動再実行しないでください。既存のaudienceファイルとApify Runsを確認してください。');process.exitCode=1;}
