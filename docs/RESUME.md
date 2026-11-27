@@ -173,3 +173,22 @@ Windows Serverプランや年払いの月額換算価格を案内しない。最
 最新の第一方針はCloudflare Workers + Workflows等の段階実行 + 既存Supabase。詳細・証拠・公式資料・必要な移植はdocs/CLOUDFLARE-ARCHITECTURE.md。
 今のコードはまだCloudflareにそのまま配備できない。常駐whileループ、pg Pool、ローカルファイル依存を変更する必要がある。次はアダプタービルド検証から。VPS/Dockerは保留の代替案。
 他プロダクトのCloudflareリソース・ルートを変更しない。既存アカウントで追加課金が不要とも未確認なので約束しない。
+
+## 2026-11-28 JST Cloudflare移植の作業中
+
+ユーザーは既存契約を使った実装継続とブラウザ操作を許可。追加契約・既存サービスへの影響・公開・有料実検証は重要事項として確認する。専用VPS不要。
+作業ツリー未コミット：Next16.4.5/OpenNext1.20.19/Wrangler4.168.0へ更新しCloudflareビルド成功。wranglerは専用beino-insight-test、routes空、workers_dev/preview_urls false。デプロイなし。Hyperdrive用のリクエスト別pg接続とALS、mock専用Workflows雛形、ジョブ作成/再開dispatchを追加。実データWebパイプラインは未完成。Hyperdrive/Secrets未設定。
+型確認成功、DBを起動して全74テスト成功。Cloudflare最終ビルド成功。wranglerラッパーのdry-run/実行時検証はまだ。runtime npm auditはhigh7（zod<4.6.6、openai経由zod、Apify経由basic-ftp等）残り、公開前に修正が必要。
+Browser skillはあるが関連js/list_tabsツールが未提供。CUAで見えたのはクラウドChrome tabs空でユーザーMacではない。ユーザーは接続状態不明、その後「ポップを出せば接続を押せる」と依頼。ツール一覧再検索でも接続要求ツールなし。plugin検索Browserは別製品候補のみ。ポップ表示済み・接続済みと偽らない。ユーザー側Chrome拡張の接続画面確認が次。秘密をチャットへ送らせない。
+
+### 2026-11-28 JST 続行結果（最新）
+
+ブラウザ接続の追加調査は終了。ユーザーChrome拡張は有効だが、このCodexにはローカルBrowserツールがない。再読み込みや追加スクリーンショットで解決を繰り返さない。ユーザーは開発継続を指示。
+
+Cloudflare移植はローカル実行まで成功：Next16.4.5/OpenNext1.20.19/Wrangler4.168.0、専用Worker+Workflow、Hyperdrive(pg)でHTTP health200、署名済みテスト認証→ジョブ登録200→Workflows自動進行→completed100%/架空分析42人。専用ローカル設定は.wrangler/smokeにあり無視対象、HTTP8793。実Cloudflare配備・DNS変更・実Supabase接続は未実施。初回はpg-cloudflareの接続終了後errorイベントで失敗したため、Clientにerrorリスナーを置きconnect/queryの拒否は維持して修正し、完走を確認。実行ログのsocket errorsも解消。
+
+OpenAI7.65.0/Zod4.6.7/Vitest5.1.2へ更新、basic-ftp6.2.6/adm-zip0.6.1を間接依存override。structured-output生成と既存機能の回帰確認、型チェック成功、DB含む80テスト成功、npm audit全依存0件。Cloudflareビルドとdry-run成功。実OpenAI/ApifyのAPI回帰はまだ行っていない。
+
+db/harden-access.sqlを追加しdb:setupへ接続。18アプリテーブルのRLS有効化とPUBLIC/anon/authenticated権限撤去。ローカルのみ適用/テスト済み。専用Supabaseへはまだ適用していない。他サービス共有DBに適用しない。
+
+実Web分析は未接続のまま。次の主要実装：取得CLIの永続DB化、予算/月間予約・重複防止・有料開始不明時停止、URL確認UI、所有者/先方表示範囲、90日削除定期処理。次の外部依存：専用Supabaseの確認・Hyperdrive/Secrets設定をユーザーにクリック順で案内（秘密はチャットに不要）。追加課金/公開前は確認。mainへのマージ・公開はしない。

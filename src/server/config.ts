@@ -6,7 +6,7 @@ export function assertConfiguration() {
   if (process.env.NODE_ENV === "production") {
     const origin = new URL(process.env.APP_ORIGIN ?? "http://invalid.local");
     const key = process.env.SESSION_SECRET ?? "";
-    if (process.env.DEMO_AUTH !== "false" || origin.protocol !== "https:" || origin.username || origin.password || origin.pathname !== "/" || origin.search || origin.hash || !process.env.DATABASE_URL || !process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY || !(process.env.ALLOWED_EMAILS ?? "").split(",").some(s=>s.trim()) || key.length < 32 || key.includes("replace-with") || key.includes("local-demo"))
+    if (process.env.DEMO_AUTH !== "false" || origin.protocol !== "https:" || origin.username || origin.password || origin.pathname !== "/" || origin.search || origin.hash || (!process.env.DATABASE_URL && process.env.DEPLOY_TARGET !== "cloudflare") || !process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY || !(process.env.ALLOWED_EMAILS ?? "").split(",").some(s=>s.trim()) || key.length < 32 || key.includes("replace-with") || key.includes("local-demo"))
       throw Error("共有環境にはHTTPS・招待認証・許可メール・DB・専用署名鍵の設定が必要です");
   }
   if (!isMock() && process.env.DEMO_AUTH === "true")

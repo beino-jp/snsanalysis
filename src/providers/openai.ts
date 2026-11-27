@@ -17,7 +17,7 @@ const schema = z.object({
     genderConfidence: z.number().min(0).max(1),
     ageConfidence: z.number().min(0).max(1),
     reason: z.string(),
-    interests: z.record(interest),
+    interests: z.record(z.string(), interest),
   }),
   skate: z.object({
     result: z.enum(["went", "maybe", "no"]),

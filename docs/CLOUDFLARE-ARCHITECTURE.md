@@ -51,3 +51,22 @@ GitHub接続で以下のdefault branchの設定を確認した。秘密情報の
 
 まずリポジトリをCloudflare用にビルドできるかローカル検証する。その後DB接続と分析段階の実行を接続し、ユーザーにCloudflareの専用Worker・Workflow・Supabase接続設定を案内する。
 ユーザーが今行う追加のサーバー契約はない。既存Cloudflare/Supabase/Apify/OpenAIを利用する。
+
+## 移植実装（作業中）
+
+Next 16.4.5 / OpenNext 1.20.19 / Wrangler 4.168.0で `npm run build:cf` と `wrangler deploy --dry-run` のパッケージ作成を確認。専用Workerは `beino-insight-test`、Workflowは `beino-insight-test-analysis`。ルート未登録・workers.dev/preview URL無効で、公開は行っていない。
+
+`cloudflare/entry.mjs` がOpenNextの画面/APIとWorkflowクラスをまとめる。常駐ワーカーの代わりに、DBチェックポイントを読むmock専用Workflowをジョブ登録時に開始する。実データの旧ProviderはこのWorkflowから呼べない。ステップの自動retryは無効。再開は同じWorkflowインスタンスを使う。
+
+Hyperdriveの実IDは未設定。専用接続はリクエストまたはWorkflowの実行コンテキスト内で生成・終了し、異なるリクエスト間で使い回さない。ローカルPostgreSQLのテストとCloudflare実環境での接続確認は別物。
+
+`npm run db:setup` はschema作成後に `db/harden-access.sql` を実行する。このSQLはアプリ18テーブルだけにRLSを有効化し、PUBLIC/anon/authenticatedから直接アクセス権を取り除く。ブラウザはアプリAPI経由でアクセスする。専用DBの所有者として実行する想定で、所有者以外のサーバーロールを使う場合は追加の権限設計が必要。他サービスの共有DBには適用しない。実Supabaseへの適用はまだ行っていない。
+
+依存更新でZod 4/OpenAI 7へ移行。structured output schema生成をオフラインテスト済み。実APIでの回帰試験はまだ。basic-ftpとadm-zipのoverrideは間接依存の修正版を固定するため。npm auditの開発依存を含む報告は0件（2026-11-27確認）だが、安全性全般の保証ではない。
+
+公開前に残る作業：専用Supabase/Hyperdrive/Secretsの設定、保持期限処理の定期起動、実データ取得の永続ステップ化、予算予約・二重実行防止、先方の表示権限、実環境E2E。現時点のmock完走を実データ分析完了と呼ばない。
+
+### ローカル実行の確認結果
+
+Wrangler/workerdとローカルHyperdrive/PostgreSQLで、署名済みテストセッションを使いHTTP登録→Workflows進行→結果取得の完走を確認。架空データ42人、progress100%。本物のSupabaseログイン・本番Hyperdrive・実API取得・ブラウザでの操作E2Eの成功とは区別する。
+pg-cloudflareは接続終了後のソケットerrorを通知することがあるため、Clientのerrorイベントを処理し、connect/queryの失敗自体は呼び出し元へ返す。

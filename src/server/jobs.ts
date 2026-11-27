@@ -1,3 +1,4 @@
+import {dispatchCloudflare} from "./cloudflare-dispatch";
 import { analyzedUser } from "../domain/analyzed-users";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -80,6 +81,7 @@ export async function createJob(input: z.infer<typeof registration>) {
     for (const kind of ["like", "comment"])
       await q("INSERT INTO job_tasks(job_id,kind) VALUES($1,$2)", [id, kind]);
   });
+  await dispatchCloudflare(id,"job");
   return id;
 }
 export async function listJobs() {

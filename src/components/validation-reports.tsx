@@ -21,8 +21,8 @@ export default function ValidationReports() {
     [selected, setSelected] = useState("");
   async function load() {
     const r = await fetch("/api/validation-reports", { cache: "no-store" }),
-      data = await r.json();
-    if (!r.ok) throw Error(data.error);
+      data = (await r.json()) as Entry[] & { error?: string };
+    if (!r.ok) throw Error(data.error ?? "読み込めませんでした");
     setRows(data);
   }
   useEffect(() => {
@@ -42,8 +42,8 @@ export default function ValidationReports() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url, journal }),
       });
-      const data = await r.json();
-      if (!r.ok) throw Error(data.error);
+      const data = (await r.json()) as { id: string; error?: string };
+      if (!r.ok) throw Error(data.error ?? "保存できませんでした");
       await load();
       setSelected(data.id);
     } catch (e) {

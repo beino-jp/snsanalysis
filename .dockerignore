@@ -15,3 +15,7 @@ playwright-report
 tests
 docs
 deploy/test.env
+
+.open-next
+.wrangler
+.dev.vars*

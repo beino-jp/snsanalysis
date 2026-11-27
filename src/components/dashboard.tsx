@@ -114,7 +114,7 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
         }
       : { cache: "no-store" },
   );
-  const b = await r.json();
+  const b = (await r.json()) as T & { error?: string };
   if (r.status === 401) {
     location.href = "/login";
     throw Error("認証が必要です");

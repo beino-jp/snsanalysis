@@ -16,8 +16,8 @@ export default function LoginForm({demo=false}:{demo?:boolean}) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const b = await r.json();
-      if (!r.ok) throw Error(b.error);
+      const b = (await r.json()) as { error?: string };
+      if (!r.ok) throw Error(b.error ?? "ログインできませんでした");
       location.href = "/";
     } catch (e) {
       setError((e as Error).message);
