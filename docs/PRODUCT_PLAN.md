@@ -27,7 +27,9 @@
 - Supabase・Apify：アカウント作成済み。ApifyはMacで投稿情報と少量コメントの取得を確認済み。
 - ドメイン：取得済み（2026-11-27確認）。サーバー：未契約。
 
-## 構成案（サービス選定・契約は未確定）
+## 構成方針（2026-11-27訂正）
+
+Cloudflare Workers + 分析処理の永続的な段階実行 + Supabaseを第一候補とする。専用VPS契約は不要。根拠と必要変更は [CLOUDFLARE-ARCHITECTURE.md](CLOUDFLARE-ARCHITECTURE.md) を参照。以下は過去の比較案で、VPSは必須条件ではない。
 
 固定費を抑える案：Cloudflare DNS + 小型VPS（Next.js・API・ワーカー）+ Supabase（PostgreSQL・招待制認証）+ Apify + OpenAI。
 Vercelを使う案も検討したが、ワーカー用サーバーとの費用をまとめるため、初期はVPSに寄せる案を提示。

@@ -1,3 +1,4 @@
+# Optional VPS fallback only. Primary plan: docs/CLOUDFLARE-ARCHITECTURE.md
 name: reach-insight-test
 x-app: &app
   build:

@@ -1,5 +1,7 @@
 # 先方テストまでの実装・公開条件
 
+> 2026-11-27更新：配備方針はCloudflare主体へ訂正。VPS契約は不要。最新の実装順は [CLOUDFLARE-ARCHITECTURE.md](CLOUDFLARE-ARCHITECTURE.md) を参照。以下のVPS/Docker手順は任意の代替案であり、ユーザーへ契約を要求しない。
+
 ## 今回の確認
 
 実データの取得記録画面で、Macに残った `.p0-results/probe-投稿ID.json` を読み込む。

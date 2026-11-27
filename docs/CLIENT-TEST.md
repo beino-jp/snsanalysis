@@ -1,5 +1,7 @@
 # 先方がURLだけで試せる環境の受け入れ条件
 
+> 2026-11-27更新：配備方針はCloudflare主体へ訂正。VPS契約は不要。最新の実装順は [CLOUDFLARE-ARCHITECTURE.md](CLOUDFLARE-ARCHITECTURE.md) を参照。以下のVPS/Docker手順は任意の代替案であり、ユーザーへ契約を要求しない。
+
 ## ゴール（2026-11-27合意）
 
 先方は招待メールからログインし、Instagram投稿URLを貼り付ける。

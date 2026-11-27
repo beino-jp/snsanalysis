@@ -165,3 +165,11 @@ CloudflareアカウントID・連絡先・支払情報は保存しない。
 サーバーは依然未契約。公式確認した候補：さくらのVPS Linux 2GB/石狩/毎月払い 1,738円/月、初期費用無料（https://vps.sakura.ad.jp/specification/）。最低利用期間3ヶ月（2026-11-11更新の公式contract-guide）、クレジットカード申込は条件付き2週間試用、終了後は本登録に移る。まだ購入を実行していない。
 2GBは少人数の限定検証の出発点であり、性能保証ではない。ビルドは別環境で行うかメモリ使用量を確認する。API利用料・バックアップ等はサーバー料金と別。
 Windows Serverプランや年払いの月額換算価格を案内しない。最新の申込画面の金額/試用/期間条件を確認してから契約する。
+
+## 最重要の訂正：VPSは不要の構成へ
+
+ユーザーから「hatching-cs/sagyo-aiはサーバー契約不要だった。今回VPS必須か」と指摘。
+接続GitHubから両repoのwrangler.toml/package.jsonを実際に確認し、Cloudflare Workers/OpenNext/TiDB構成であることを確認した。今回も専用VPSを必須とする理由はないと回答し、契約案内を止めた。
+最新の第一方針はCloudflare Workers + Workflows等の段階実行 + 既存Supabase。詳細・証拠・公式資料・必要な移植はdocs/CLOUDFLARE-ARCHITECTURE.md。
+今のコードはまだCloudflareにそのまま配備できない。常駐whileループ、pg Pool、ローカルファイル依存を変更する必要がある。次はアダプタービルド検証から。VPS/Dockerは保留の代替案。
+他プロダクトのCloudflareリソース・ルートを変更しない。既存アカウントで追加課金が不要とも未確認なので約束しない。
