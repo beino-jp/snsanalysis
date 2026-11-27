@@ -156,3 +156,12 @@ node scripts/audit-audience.mjs
 共有環境用Docker imageのビルドと、コンテナ内で未設定のproduction構成が拒否されることを確認。
 npm auditは12件（moderate2/high8/critical2）を報告。外部公開前の依存更新・実行時依存分離を残課題としてdocs/CLIENT-TEST.mdに明記。
 ユーザーはCloudflareやTiDB等、必要なサービスの設定を自身で進められると申し出。Cloudflareでテスト用HTTPSの名前を管理し、DBは作成済みSupabase/PostgreSQLを継続する方針を説明。TiDB追加は不要。ドメイン取得/サーバー契約/秘密設定はまだ実行していない。
+
+## ドメイン取得完了（2026-11-27）
+
+ユーザーがCloudflareで `beino-insight.com` を購入し、画面でアクティブ/登録完了通知を確認。自動更新オン、有効期限2027-11-27、表示更新価格11.17 USD/年。
+検証用ホストは `test.beino-insight.com` にする方針。DNS接続先はサーバー決定後に設定する。登録完了メールと、別途必要な場合の登録者メール認証を混同しない。
+CloudflareアカウントID・連絡先・支払情報は保存しない。
+サーバーは依然未契約。公式確認した候補：さくらのVPS Linux 2GB/石狩/毎月払い 1,738円/月、初期費用無料（https://vps.sakura.ad.jp/specification/）。最低利用期間3ヶ月（2026-11-11更新の公式contract-guide）、クレジットカード申込は条件付き2週間試用、終了後は本登録に移る。まだ購入を実行していない。
+2GBは少人数の限定検証の出発点であり、性能保証ではない。ビルドは別環境で行うかメモリ使用量を確認する。API利用料・バックアップ等はサーバー料金と別。
+Windows Serverプランや年払いの月額換算価格を案内しない。最新の申込画面の金額/試用/期間条件を確認してから契約する。
