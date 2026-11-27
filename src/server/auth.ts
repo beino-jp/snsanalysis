@@ -24,7 +24,8 @@ export async function requireAuth() {
   )
     throw Error("UNAUTHORIZED");
   const data = JSON.parse(Buffer.from(body, "base64url").toString());
-  if (data.exp < Date.now()) throw Error("UNAUTHORIZED");
+  if (typeof data.email !== "string" || !Number.isFinite(data.exp) || data.exp < Date.now()) throw Error("UNAUTHORIZED");
+  if (!(isMock() && process.env.DEMO_AUTH === "true") && !(process.env.ALLOWED_EMAILS ?? "").split(",").map(s=>s.trim().toLowerCase()).includes(data.email.toLowerCase())) throw Error("UNAUTHORIZED");
   return data.email as string;
 }
 export async function requireMutation() {
@@ -34,7 +35,7 @@ export async function requireMutation() {
   const host = h.get("x-forwarded-host") ?? h.get("host");
   if (
     !origin ||
-    !(origin === process.env.APP_ORIGIN || new URL(origin).host === host)
+    !(process.env.APP_ORIGIN ? origin === new URL(process.env.APP_ORIGIN).origin : new URL(origin).host === host)
   )
     throw Error("FORBIDDEN");
 }

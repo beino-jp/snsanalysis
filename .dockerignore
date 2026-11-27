@@ -1,0 +1,17 @@
+.git
+.env*
+*.local.json
+.p0-results
+node_modules
+.next
+attachments
+library-files
+*.zip
+*.log
+*.tsbuildinfo
+coverage
+test-results
+playwright-report
+tests
+docs
+deploy/test.env

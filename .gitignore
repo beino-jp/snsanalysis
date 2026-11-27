@@ -12,3 +12,4 @@ coverage/
 attachments/
 *.zip
 *.local.json
+deploy/test.env

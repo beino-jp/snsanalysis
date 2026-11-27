@@ -145,3 +145,14 @@ node scripts/audit-audience.mjs
 
 更新ZIP `reach-insight-coverage-ui-update.zip`。既存audience JSONを再読み込みするだけで追加課金なし。
 単体/HTMLテスト61成功・DB5スキップ、typecheck成功、本番ビルド成功。実ブラウザでの変更後の確認はまだ。
+
+## 先方テスト環境へ向けた最新方針
+
+ユーザーは非公開・投稿なし・根拠不足は不明でよいと明示。ゴールを、先方が共有URLにログインして投稿URLだけで検証できる状態と再確認。技術に不慣れな利用者のUIUXを重視する。
+詳細な受け入れ条件と実装順はdocs/CLIENT-TEST.md。
+今回、URL優先の任意設定入力、招待ログイン表示、production設定ガード、既存セッションの許可リスト再確認、Origin制限、Docker/Caddy/Web/worker分離構成とヘルスチェックを追加。
+先方へ公開する作業はまだ行っていない。ブラウザの実データ実行は未接続で、次の主要タスク。CLIを案内し続ける方針にはしない。
+
+共有環境用Docker imageのビルドと、コンテナ内で未設定のproduction構成が拒否されることを確認。
+npm auditは12件（moderate2/high8/critical2）を報告。外部公開前の依存更新・実行時依存分離を残課題としてdocs/CLIENT-TEST.mdに明記。
+ユーザーはCloudflareやTiDB等、必要なサービスの設定を自身で進められると申し出。Cloudflareでテスト用HTTPSの名前を管理し、DBは作成済みSupabase/PostgreSQLを継続する方針を説明。TiDB追加は不要。ドメイン取得/サーバー契約/秘密設定はまだ実行していない。

@@ -722,7 +722,7 @@ function NewAnalysis({
   onCreated: (id: string) => void;
 }) {
   const [url, setUrl] = useState(""),
-    [project, setProject] = useState("GINZA SIX アイススケート"),
+    [project, setProject] = useState(""),
     [reference, setReference] = useState("execution"),
     [estimate, setEstimate] = useState<Estimate | null>(null),
     [busy, setBusy] = useState(false),
@@ -768,12 +768,12 @@ function NewAnalysis({
     try {
       if (!estimate)
         setEstimate(
-          await api<Estimate>("/api/estimate", { url, project, reference }),
+          await api<Estimate>("/api/estimate", { url, project: project.trim() || "投稿の分析", reference }),
         );
       else {
         const result = await api<{ id: string }>("/api/jobs", {
           url,
-          project,
+          project: project.trim() || "投稿の分析",
           reference,
         });
         onCreated(result.id);
@@ -832,17 +832,7 @@ function NewAnalysis({
                   Instagramの公開投稿・リールのURLを登録してください。
                 </p>
                 <label>
-                  案件名
-                  <input
-                    autoFocus
-                    required
-                    maxLength={100}
-                    value={project}
-                    onChange={(e) => setProject(e.target.value)}
-                  />
-                </label>
-                <label>
-                  PR投稿のURL
+                  Instagram投稿のURL
                   <button
                     className="sample-button"
                     type="button"
@@ -852,12 +842,16 @@ function NewAnalysis({
                   </button>
                   <input
                     type="url"
+                    autoFocus
                     required
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://www.instagram.com/p/.../"
                   />
                 </label>
+                <details style={{margin:"18px 0"}}>
+                  <summary style={{cursor:"pointer"}}>案件名・詳細設定（任意）</summary>
+                  <label>案件名<input maxLength={100} value={project} onChange={e=>setProject(e.target.value)} placeholder="例：冬の新商品PR（空欄でも進めます）" /></label>
                 <label>
                   分析の基準日
                   <select
@@ -878,6 +872,7 @@ function NewAnalysis({
                     基準日時から過去365日以内の投稿を分析します。
                   </div>
                 </label>
+                </details>
                 <div className="demo-banner" style={{ marginBottom: 0 }}>
                   <Database size={18} />
                   <div>
@@ -890,7 +885,7 @@ function NewAnalysis({
                 <span className="pill">
                   <Instagram size={14} /> Instagram
                 </span>
-                <h3 style={{ marginTop: 14 }}>{project}</h3>
+                <h3 style={{ marginTop: 14 }}>{project.trim() || "投稿の分析"}</h3>
                 <p className="muted small">@{estimate.target.owner}</p>
                 <div className="estimate-grid">
                   <div className="estimate-cell">

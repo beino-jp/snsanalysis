@@ -7,6 +7,7 @@ test("mock PR registration through segmented dashboard", async ({ page }) => {
     page.getByRole("heading", { name: "ダッシュボード", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "新規分析", exact: true }).click();
+  await page.getByText("案件名・詳細設定（任意）", {exact:true}).click();
   await page.getByLabel("案件名", { exact: true }).fill("E2E アイススケート");
   await page.getByRole("button", { name: "デモURLを使う" }).click();
   await page.getByRole("button", { name: "見積もりを確認" }).click();
@@ -120,4 +121,16 @@ test("campaign purpose to ten budgeted mock recommendations", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: "評価の内訳を閉じる" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
+});
+
+test('URL-only registration does not require a project name or advanced options',async({page})=>{
+ await page.goto('/login');
+ await page.getByLabel('パスワード',{exact:true}).fill('local-demo');
+ await page.getByRole('button',{name:'ログイン',exact:true}).click();
+ await page.getByRole('button',{name:'新規分析',exact:true}).click();
+ await expect(page.getByLabel('案件名',{exact:true})).not.toBeVisible();
+ await page.getByRole('button',{name:'デモURLを使う'}).click();
+ await page.getByRole('button',{name:'見積もりを確認'}).click();
+ await expect(page.getByRole('heading',{name:'実行前の確認'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'投稿の分析',exact:true})).toBeVisible();
 });
