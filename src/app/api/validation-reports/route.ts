@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import { requireAuth, requireMutation } from "@/server/auth";
+import { requireInternalAuth as requireAuth, requireInternalMutation as requireMutation } from "@/server/auth";
 import { query } from "@/server/db";
 import { parseValidationReport } from "@/domain/validation-report";
 export async function GET() {

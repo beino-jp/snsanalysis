@@ -29,7 +29,7 @@ export async function requireAuth() {
   return data.email as string;
 }
 export async function requireMutation() {
-  await requireAuth();
+  const email = await requireAuth();
   const h = await headers();
   const origin = h.get("origin");
   const host = h.get("x-forwarded-host") ?? h.get("host");
@@ -38,6 +38,7 @@ export async function requireMutation() {
     !(process.env.APP_ORIGIN ? origin === new URL(process.env.APP_ORIGIN).origin : new URL(origin).host === host)
   )
     throw Error("FORBIDDEN");
+  return email;
 }
 export async function authenticate(email: string, password: string) {
   assertConfiguration();
@@ -71,4 +72,18 @@ export function cookieOptions() {
     path: "/",
     maxAge: 8 * 3600,
   };
+}
+
+export function internalEmail(email:string){
+  return (isMock() && process.env.DEMO_AUTH==='true') || (process.env.ADMIN_EMAILS??'').split(',').map(e=>e.trim().toLowerCase()).includes(email.toLowerCase());
+}
+export async function requireInternalAuth(){
+  const email=await requireAuth();
+  if(!internalEmail(email))throw Error('FORBIDDEN');
+  return email;
+}
+export async function requireInternalMutation(){
+  const email=await requireMutation();
+  if(!internalEmail(email))throw Error('FORBIDDEN');
+  return email;
 }

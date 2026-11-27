@@ -192,3 +192,18 @@ OpenAI7.65.0/Zod4.6.7/Vitest5.1.2へ更新、basic-ftp6.2.6/adm-zip0.6.1を間�
 db/harden-access.sqlを追加しdb:setupへ接続。18アプリテーブルのRLS有効化とPUBLIC/anon/authenticated権限撤去。ローカルのみ適用/テスト済み。専用Supabaseへはまだ適用していない。他サービス共有DBに適用しない。
 
 実Web分析は未接続のまま。次の主要実装：取得CLIの永続DB化、予算/月間予約・重複防止・有料開始不明時停止、URL確認UI、所有者/先方表示範囲、90日削除定期処理。次の外部依存：専用Supabaseの確認・Hyperdrive/Secrets設定をユーザーにクリック順で案内（秘密はチャットに不要）。追加課金/公開前は確認。mainへのマージ・公開はしない。
+
+## 2026-11-27 実データWeb接続の追加（最新）
+
+ユーザーの「続けて」指示で `/analyze` のURL→300円上限確認→チェック→開始→履歴/属性・関心集計と専用API/LiveAnalysisWorkflowを実装。外部APIは実行していない。
+- LIVE_ANALYSIS_ENABLEDは既定無効。DEMO_AUTH=false/専用署名鍵/固定gpt-4.1-mini・入力.4出力1.6/キー/月間API枠300〜6000円を要求する。CloudflareのLIVE_ANALYSIS_WORKFLOWとHyperdriveが必要。
+- SQL live_analyses/live_operations/live_budget_months追加、RLSも対象に。300円原子的予約、同requestKey重複と実行中同URLの再取得防止、日本時間月次API枠、完了時USD×300の円換算目安で一度だけ精算。不明課金は予約を残して手動確認。固定費別なので月額1万円は契約プラン確認が必要。
+- live/pipeline.tsは既存executeProbeで投稿/コメント→プロフィール取得と外部削除、20人まで1人ずつAIへ。全有料単位の開始意図を先にDB保存し、成否不明なら再実行しない。自動retry0。AI応答を解析前に保存。投稿者本人は除外、非公開/材料なしは不明。成功時チェックポイント削除。server reportのAPI出力は集計だけ。
+- ADMIN_EMAILSを新設し、旧内部APIと個別検証記録は内部担当者のみ。招待先方は `/` から `/analyze` へ。ホームSSRで認証確認。ローカルDEMO_AUTH=trueの既存デモは維持。
+- Cloudflare Cron日次00:00UTC(09:00JST)で期限処理。90日データ削除、新規分析1時間以上未完了を手動確認へ。外部削除失敗の管理画面/手動再開・監視運用はまだ。
+- 型チェックとDB含む87テスト成功。外部をfakeにしたパイプラインの取得〜精算、所有者排他、二重課金/曖昧開始拒否を確認。Cloudflareビルド成功、HTTPでclient内部API拒否/ホーム転送/準備中画面/無効時ジョブ未作成を確認。
+- Playwright/Chromiumで375px/1440pxの2件E2E成功。費用確認・チェック・開始・結果、横幅を確認。ブラウザの新API応答はテストfixture、実APIを呼んでいない。test-results/live-375.png/live-1440.pngは架空データのみ。
+- 実接続はまだ。Cloud environment statusはsecrets/runtime_variables/outbound_identitiesなし、HTTP portalなし。ローカルBrowserも使えない。秘密をチャットに要求しない。Supabase専用プロジェクトか確認する非同期質問を送信済み、未回答なら回答待ち。質問：Supabaseの「snsanalysis」は今回専用/他サービス共用/不明。既存サービスDBへ誤適用しない。
+- 次は実Supabase/Hyperdrive/Secretsの安全な設定、SDK更新後の実APIで1本検証（範囲・上限を提示して事前確認）、招待ログイン/実環境E2E。公開と追加課金は未実施。ブラウザ連携の追加スクリーンショット探しを再開しない。
+
+Supabaseの「snsanalysis」は今回のアプリ専用とのユーザー回答を受領。他サービスと共用ではない。接続操作はまだで、実際のキー/DB情報はクラウドにない。専用DBへの設定を案内するところから再開する。APIキー・DBパスワードをチャットに送らせない。

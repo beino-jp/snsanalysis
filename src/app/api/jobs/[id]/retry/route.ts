@@ -1,6 +1,6 @@
 import { dispatchCloudflare } from "@/server/cloudflare-dispatch";
 import { NextRequest, NextResponse } from "next/server";
-import { requireMutation } from "@/server/auth";
+import { requireInternalMutation as requireMutation } from "@/server/auth";
 import { query } from "@/server/db";
 export async function POST(
   _: NextRequest,

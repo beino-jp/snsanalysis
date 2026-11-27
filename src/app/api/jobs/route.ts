@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, requireMutation } from "@/server/auth";
+import { requireInternalAuth as requireAuth, requireInternalMutation as requireMutation } from "@/server/auth";
 import { createJob, listJobs, registration } from "@/server/jobs";
 export async function GET() {
   try {

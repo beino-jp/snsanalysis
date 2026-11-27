@@ -317,6 +317,7 @@ export default function Dashboard() {
             <Database size={19} />
             <span>実データの取得記録</span>
           </button>
+          <a className="nav-item" href="/analyze"><Link2 size={18}/><span>投稿を分析する</span></a>
           <button
             className={"nav-item " + (page === "settings" ? "active" : "")}
             onClick={() => navigate("settings")}

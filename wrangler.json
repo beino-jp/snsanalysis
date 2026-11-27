@@ -28,6 +28,19 @@
       "concurrency": {
         "limit": 1
       }
+    },
+    {
+      "name": "beino-insight-test-live-analysis",
+      "binding": "LIVE_ANALYSIS_WORKFLOW",
+      "class_name": "LiveAnalysisWorkflow",
+      "concurrency": {
+        "limit": 1
+      }
     }
-  ]
+  ],
+  "triggers": {
+    "crons": [
+      "0 0 * * *"
+    ]
+  }
 }

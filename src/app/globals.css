@@ -3649,3 +3649,16 @@ label input,
 .audience-person blockquote {border-left:3px solid #c8d9e8;margin:12px 0;padding:8px 14px;color:#52657d;}
 .audience-overview h3 {margin:24px 0 12px;}
 @media(max-width:700px){.audience-coverage-grid{grid-template-columns:1fr;}}
+
+.live-page { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+.live-page h1 { font-size: clamp(24px,4vw,32px); margin-top: 24px; }
+.live-card { padding: 24px; margin: 24px 0; }
+.live-card h2 { margin-top: 0; font-size: 20px; }
+.live-card form { display: grid; gap: 12px; }
+.live-card input[type=url], .live-card select { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: white; }
+.live-card button { margin-top: 12px; padding: 12px 20px; border-radius: 8px; }
+.live-confirm { display: flex; align-items: flex-start; gap: 10px; margin: 20px 0; }
+.live-confirm input { width: 20px; height: 20px; flex-shrink: 0; margin-top: 3px; }
+.live-url { overflow-wrap: anywhere; }
+.live-card button:disabled { cursor: not-allowed; }
+.live-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }

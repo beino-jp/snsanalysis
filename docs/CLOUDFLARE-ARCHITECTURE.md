@@ -70,3 +70,9 @@ Hyperdriveの実IDは未設定。専用接続はリクエストまたはWorkflow
 
 Wrangler/workerdとローカルHyperdrive/PostgreSQLで、署名済みテストセッションを使いHTTP登録→Workflows進行→結果取得の完走を確認。架空データ42人、progress100%。本物のSupabaseログイン・本番Hyperdrive・実API取得・ブラウザでの操作E2Eの成功とは区別する。
 pg-cloudflareは接続終了後のソケットerrorを通知することがあるため、Clientのerrorイベントを処理し、connect/queryの失敗自体は呼び出し元へ返す。
+
+### 少量の実データWorkflowとCron
+
+`LiveAnalysisWorkflow` を専用名 `beino-insight-test-live-analysis` / binding `LIVE_ANALYSIS_WORKFLOW` で追加。内容はCLIENT-TEST.mdのURL分析節を参照。既定はLIVE_ANALYSIS_ENABLEDが未設定/falseで無効。月間API枠、開始意図、精算と集計の本人スコープをDBに保存する。日次Cron（00:00UTC/09:00JST）も用意したが未配備。
+
+ユーザーはSupabase「snsanalysis」が今回だけの専用プロジェクトであると回答済み。クラウド環境には外部サービスの秘密や接続情報がなく、ブラウザをユーザーMacに接続する機能も現在提供されていないため、実設定はユーザーの画面で案内する必要がある。

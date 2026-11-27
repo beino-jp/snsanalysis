@@ -10,7 +10,8 @@ BEGIN
     'projects','target_posts','jobs','job_tasks','engagements','sns_users',
     'user_posts','user_analyses','job_user_analyses','aggregates','provider_runs',
     'raw_payloads','categories','settings','discovery_jobs',
-    'discovery_candidates','discovery_charges','validation_reports'
+    'discovery_candidates','discovery_charges','validation_reports',
+    'live_budget_months','live_analyses','live_operations'
   ] LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', app_table);
     EXECUTE format('REVOKE ALL ON TABLE public.%I FROM PUBLIC', app_table);
