@@ -3638,3 +3638,14 @@ label input,
     width: 100%;
   }
 }
+.audience-coverage-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:16px 0;}
+.audience-coverage-card {display:flex;flex-direction:column;gap:10px;padding:18px;border:1px solid var(--border,#e2e8f0);border-radius:12px;}
+.audience-coverage-card strong {font-size:22px;}
+.audience-coverage-card span {font-size:13px;color:#52657d;}
+.audience-tag-list {display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;}
+.audience-person-details {margin-top:24px;border-top:1px solid #e2e8f0;padding-top:20px;}
+.audience-person-details summary {cursor:pointer;font-weight:700;padding:8px 0;}
+.audience-person {padding:20px 0;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere;}
+.audience-person blockquote {border-left:3px solid #c8d9e8;margin:12px 0;padding:8px 14px;color:#52657d;}
+.audience-overview h3 {margin:24px 0 12px;}
+@media(max-width:700px){.audience-coverage-grid{grid-template-columns:1fr;}}

@@ -37,3 +37,10 @@ it('retains only bounded comments and builds safe profile links',()=>{
  expect(()=>parseValidationReport({...f,comments:[{username:'javascript:alert(1)',text:'x'}]},url)).toThrow();
  expect(()=>parseValidationReport({...f,comments:[]},url)).toThrow();
 });
+it('imports only aggregate input coverage, never the full profile checkpoint',()=>{
+ const f={...fixture(),comments:Array.from({length:15},()=>({username:'sample',text:'comment'})),audience:{version:1,source:'public-profile-text',analyzedAt:'2026-11-27T00:00:00Z',people:[{username:'sample',status:'insufficient',gender:{value:'不明',confidence:0,reason:'不足',evidence:[]},age:{value:'不明',confidence:0,reason:'不足',evidence:[]},description:'不足',interests:[]}]},profileInputs:[{username:'sample',private:false,biography:'PRIVATE_UNNEEDED_BIO',latestPosts:[]}]};
+ const report=parseValidationReport(f,url);
+ expect(report.coverage?.public).toBe(1);expect(report.coverage?.publicNoPostText).toBe(1);
+ expect(JSON.stringify(report)).not.toContain('PRIVATE_UNNEEDED_BIO');
+ expect(report.attributionStatus).toBe('analyzed');
+});

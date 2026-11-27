@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { audienceCoverage } from "../../scripts/lib/audience-coverage.mjs";
 import { audienceSchema } from "./audience";
 const count = z.number().int().min(0).max(1e9);
 const base = {
@@ -30,6 +31,12 @@ const journal = z.object({
   startedAt: z.string().datetime(),
   comments: z.array(z.object({username: z.string().regex(/^[A-Za-z0-9_.]{1,30}$/).nullable(), text: z.string().max(4000)})).max(20).optional(),
   audience: audienceSchema.optional(),
+  profileInputs: z.array(z.object({
+    username: z.string().regex(/^[A-Za-z0-9_.]{1,30}$/),
+    private: z.boolean().optional(), isPrivate: z.boolean().optional(),
+    biography: z.string().max(2000).optional(),
+    latestPosts: z.array(z.object({caption:z.string().max(400)})).max(20).optional(),
+  })).max(20).optional(),
   runs: z.array(z.discriminatedUnion("key", [post, comments])).length(2),
 });
 export type ValidationReport = ReturnType<typeof parseValidationReport>;
@@ -71,9 +78,10 @@ export function parseValidationReport(raw: unknown, url: string) {
         : null,
     comments: data.comments?.map(c => ({...c, profileUrl: c.username ? `https://www.instagram.com/${c.username}/` : null})),
     audience: data.audience,
+    coverage: data.audience && data.profileInputs ? audienceCoverage(data) : null,
     costUsd: cost,
     cleanup: "deleted" as const,
     source: "local-probe-upload" as const,
-    attributionStatus: "not_analyzed" as const,
+    attributionStatus: data.audience ? "analyzed" as const : "not_analyzed" as const,
   };
 }

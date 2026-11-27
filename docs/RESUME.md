@@ -131,3 +131,17 @@ node scripts/audit-audience.mjs
 ```
 
 更新ZIPは `reach-insight-coverage-check.zip`。中身は診断スクリプト2ファイルだけで、アプリ停止・Docker起動・npmインストールは不要。
+
+### 診断結果受領とUIの改善
+
+2026-11-27、ユーザーMac診断で公開8/非公開7、公開で本文あり6、両方なし2、56投稿使用、1500文字枠の切り捨て0、性別判定1/15・年代0/15・関心5/15を確認。詳細はDATA-GAPS.md。
+投稿者からInsights集計の提供は難しいとの回答。提供を前提にしない。
+
+`audience-overview.tsx`を追加し、情報充足率・公開/非公開・関心タグ集計を先に表示、個別根拠はdetailsで折りたたみ、confidence百分率強調を廃止。
+元のaudience JSONのprofileInputsから集計だけを計算してDBに残す。profileInputs本文そのものは取込payloadから落とす。
+同一記録を再インポートするとpayloadを更新するため、再取得なしでcoverageを追加できる。created_atを変えず保持期限を延ばさない。
+未インポートのcoverageはゼロ扱いにせず再読み込み案内を表示。
+記録末尾の「属性未実施」等の古い文言も分析済みかどうかで切り替える。
+
+更新ZIP `reach-insight-coverage-ui-update.zip`。既存audience JSONを再読み込みするだけで追加課金なし。
+単体/HTMLテスト61成功・DB5スキップ、typecheck成功、本番ビルド成功。実ブラウザでの変更後の確認はまだ。

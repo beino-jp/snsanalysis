@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       .update(report.url + "|" + report.startedAt + "|" + (report.audience?.analyzedAt ?? ""))
       .digest("hex");
     await query(
-      "INSERT INTO validation_reports(id,payload) VALUES($1,$2) ON CONFLICT DO NOTHING",
+      "INSERT INTO validation_reports(id,payload) VALUES($1,$2) ON CONFLICT(id) DO UPDATE SET payload=EXCLUDED.payload",
       [id, JSON.stringify(report)],
     );
     return NextResponse.json({ id, report });

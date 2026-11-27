@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   Loader2,
 } from "lucide-react";
-import {audienceCounts} from "@/domain/audience";
+import AudienceOverview from "./audience-overview";
 import type { ValidationReport } from "@/domain/validation-report";
 type Entry = { id: string; payload: ValidationReport; created_at: string };
 const number = (n: number) => n.toLocaleString("ja-JP");
@@ -80,8 +80,7 @@ export default function ValidationReports() {
           検証JSONを取り込む
         </h2>
         <p className="form-hint">
-          対象はアプリ内の .p0-results/probe-投稿ID.json
-          です。明細保存を指定した新しいテストでは、コメント本文とユーザー名も取り込めます。
+          属性分析済みの audience-投稿ID.json を選んでください。以前の probe・comments の記録も読み込めます。
         </p>
         <label>
           検証したInstagram投稿URL
@@ -169,21 +168,7 @@ export default function ValidationReports() {
               </section>
             ))}
           </div>
-          {report.audience && <section className="panel validation-details">
-            <h2>どんな層に届いたか</h2>
-            <p>分析対象 {report.audience.people.length}人／コメント取得者 {report.uniqueCommenters}人。投稿全体・いいねユーザー全体を代表する調査ではありません。</p>
-            <h3>性別・年代</h3>
-            {(['gender','age'] as const).map(field=><p key={field}>{field==='gender'?'性別':'年代'}：{Object.entries(audienceCounts(report.audience!.people,field)).map(([k,n])=>`${k} ${n}人`).join(' ／ ')}</p>)}
-            <h3>関心・どんな人か</h3>
-            {report.audience.people.map((p,i)=><article key={i} style={{padding:"16px 0",borderBottom:"1px solid #e2e8f0"}}>
-              <strong>対象者 {i+1} · {p.gender.value}／{p.age.value}</strong>
-              <p>{p.description}</p>
-              <p className="form-hint">性別の根拠：{p.gender.reason} ／ 年代の根拠：{p.age.reason}</p>
-              {p.interests.map((f,j)=><p key={j}><strong>{f.value}</strong>（確信度 {Math.round(f.confidence*100)}%） · {f.reason}<br/>根拠：「{f.evidence.join('」「')}」</p>)}
-              {p.age.value!=='10代' && <a href={`https://www.instagram.com/${p.username}/`} target="_blank" rel="noopener noreferrer">プロフィールで確認 ↗</a>}
-            </article>)}
-            <p className="form-hint">自己紹介・取得できた公開投稿テキストに基づく推定です。非公開・根拠不足は不明。名前や見た目で性別・年代を補いません。</p>
-          </section>}
+          {report.audience && <AudienceOverview audience={report.audience} coverage={report.coverage} total={report.uniqueCommenters} />}
           {!report.audience && report.comments && <section className="panel validation-details">
             <h2>取得したコメント</h2>
             <p className="form-hint">公開コメントの原文です。属性・選定理由のAI判定は未実施です。リンク先はInstagramです。</p>
@@ -212,12 +197,12 @@ export default function ValidationReports() {
                 検証プログラムの記録：削除済み
               </dd>
               <dt>属性判定</dt>
-              <dd>未実施 — 性別・年代・関心を推測で補いません</dd>
+              <dd>{report.audience ? "分析済み。不明・非公開を含み、全員の属性が分かったわけではありません。" : "未実施"}</dd>
               <dt>コメント本文・ユーザー明細</dt>
-              <dd>{report.comments ? `${report.comments.length}件を保存。プロフィール詳細・属性は未取得です` : "以前のテストでは保存せず削除したため、ここにはありません"}</dd>
+              <dd>{report.comments ? `${report.comments.length}件を保存。${report.audience ? "属性分析の結果あり" : "属性分析は未実施"}` : "以前のテストでは保存せず削除したため、ここにはありません"}</dd>
             </dl>
             <p className="error">
-              これは一部取得の検証結果です。返信は取得対象外です。投稿者本人の除外と属性判定は未実施のため、属性集計用の人数とは異なります。
+              これは一部取得の検証結果です。返信は取得対象外です。投稿者本人の除外は未実施です。取得範囲と判定可能な人数を確認してください。
             </p>
             <p className="form-hint">
               出所：利用者がアップロードしたローカル検証記録。サーバーがApifyへ再照合した結果ではありません。投稿URLとファイルの対応を確認してください。
