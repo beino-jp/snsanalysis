@@ -276,3 +276,11 @@ GitHubを確認：repoはPUBLIC、default branch main、PR#1 OPEN/MERGEABLE、�
 ユーザーが設定→ビルド構成の右側デプロイコマンドを明示config付きに変更して保存・再試行し、ビルド#70fd5b0dの緑チェックと「成功した」の報告を受領。main、専用beino-insight-test-build、Build npm run build:cf、Deploy npm run check:cf && npx wrangler deploy --config wrangler.json、Root /、NODE_VERSIONの設定を画面で確認。ログのNode24.22.3/npm10.9.2、npm監査0件も表示。初回の配置成功として扱い、同じコマンド修正やトークン作成を繰り返さない。追加契約/プラン変更は報告されていないが利用料ゼロとは断言しない。
 次はbeino-insight-testの設定→「変数とシークレット」→追加を開いてもらい、アプリ実行時のSUPABASE_URL / SUPABASE_ANON_KEY / SESSION_SECRET / ALLOWED_EMAILS / ADMIN_EMAILSをSecretとして登録する。ビルド設定にあるNODE_VERSIONとは別の領域。Secretにして後続のWrangler配備で手入力の通常varsが消えることを避ける。キー本体や署名鍵はチャット/スクリーンショットへ要求しない。まず空の追加画面を案内する。
 実DBへのSQL・実Supabase認証・SMTP配信・ユーザー招待・HTTPSドメイン公開・新しい有料分析は依然未確認/未実施。コードは公開ルートなしのまま。docs修正のPR#2はdraftで、mainへの反映は手動実行時Secrets設定中の自動再配備を避けて保留する。
+
+### 2026-11-29 実行時Secretsの登録報告とアカウント管理Issue（最新）
+
+SUPABASE_URLとSUPABASE_ANON_KEYは、実行時設定一覧のシークレット／暗号化された値として画面で確認済み。SESSION_SECRETはMacで生成して値を表示せずコピーする手順を案内し、ユーザーから登録完了報告を受領。ALLOWED_EMAILSとADMIN_EMAILSも本人のメールをシークレットで登録するよう案内し、完了報告を受領した。実際の秘密値は受領していない。後者3項目の一覧・実DB接続・ログイン・実メール配信はまだ未確認。Deployを途中で押したことだけを理由に正しいSUPABASE_URLを消す必要はなく、そのまま維持する案内で解決した。
+
+ユーザーが「先々はプロダクトの管理画面からやれるようにissueを書いて」と明示依頼。既存Issueがないことを確認し、Issue #3 https://github.com/beino-jp/snsanalysis/issues/3 を作成。管理画面からの招待、既定クライアント権限、権限変更、停止、DBへの許可リスト移行、既存セッションへの反映、最後の管理者保護、監査、再デプロイ不要を受け入れ条件に記載した。機能実装・実招待送信は未実施。インフラ接続は初回中心だが、現状の利用者追加には手動招待と許可リスト更新が毎回必要なことを説明する。
+
+次は実行時シークレット5項目の名前と種別を値が伏せられた一覧で確認し、認証接続とHTTPS公開の準備を進める。mainへの反映は引き続き保留し、PR#2のdraftブランチだけへ記録する。公開ルートなし／実API分析なしは継続。
