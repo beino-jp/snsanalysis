@@ -13,7 +13,7 @@ CloudflareのWorkers & Pages → Create application → GitHubで新しいアプ
 | Git branch | `main`（2026-11-29に承認済みPR#1を取り込み済み） |
 | Root directory | リポジトリのルート |
 | Build command | `npm run build:cf` |
-| Deploy command | `npm run check:cf && npx wrangler deploy` |
+| Deploy command | `npm run check:cf && npx wrangler deploy --config wrangler.json` |
 | Node version | `24`（ビルド環境のNODE_VERSIONで指定） |
 
 PR#1はユーザー承認後にmainへ取り込み済み。初回はmainを使う。Worker名はwrangler.jsonのnameと一致させる。Save and Deployの前に設定内容と既存プランの利用枠を確認する。新規契約や有料プラン切替が表示された場合はその内容を確認し、ユーザーの承認なしに申し込まない。
@@ -21,6 +21,16 @@ PR#1はユーザー承認後にmainへ取り込み済み。初回はmainを使�
 Git連携後は選択ブランチへのpushが自動ビルド・配置を起動する。連携前と同じ感覚でpushしない。初回の配置を承認してもらう際に、この継続動作も説明する。別ブランチのPreview buildsは無効にし、同じDBやWorkflowを別プレビューへ複製しない。
 
 公式：<https://developers.cloudflare.com/workers/ci-cd/builds/>、<https://developers.cloudflare.com/workers/ci-cd/builds/configuration/>。
+
+### 初回配置のエラー修正（2026-11-29）
+
+初回ビルド#570e866eはmain、専用トークン/Node24でOpenNextビルドまで成功したが、配置段階で`no local hyperdrive connection string`により失敗。ユーザーの入力やDBパスワードが原因と判断しない。
+
+Wrangler4.168.0は、OpenNextプロジェクトでconfigを明示せず非dry-runのdeployを行うと、`opennextjs-cloudflare deploy`へ自動委譲する。この処理のgetEnvFromPlatformProxyがgetPlatformProxyでローカルHyperdriveを初期化し、localConnectionString未設定のエラーとなった。従来のdry-runは自動委譲をスキップするので見逃していた。
+
+Cloudflare Worker → 設定 → ビルドのデプロイコマンドを上表のように`--config wrangler.json`付きへ変更し、保存後に再試行する。これは現在のdummyキャッシュ構成で、ビルド済みcloudflare/entry.mjsをWranglerへ直接渡す方法。OpenNextのキャッシュ初期化やskew protectionを有効化する場合は改めて配置経路を検証する。
+
+本物のCloudflare APIにアクセスしないローカルHTTP拒否サーバーと架空のトークンで、通常のdeployは同じHyperdriveエラー、config明示付きは自動委譲もHyperdriveエラーもなく、ローカル模擬APIのWorker情報取得まで進むことを確認した。実Cloudflareへの配置成功・DB接続成功はまだ未確認。権限の一括追加、DBパスワード再入力、localConnectionStringのコミットは不要。
 
 ### 手動作成したAPIトークンが候補に出ない場合
 

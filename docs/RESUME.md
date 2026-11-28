@@ -262,3 +262,11 @@ GitHubを確認：repoはPUBLIC、default branch main、PR#1 OPEN/MERGEABLE、�
 ユーザーがmain取り込みの確認に「進めてください」と回答。PR#1のhead 012cb51の2件のCI verify SUCCESSを確認後、そのSHAを指定してsquash mergeした。GitHubでMERGEDを確認し、mainのcommitは65790ce5c8130246e8c79700494d0c48f7585df6。origin/mainをfetchし、承認済みheadとツリーが完全一致すること、mainにbuild:cf/check:cfがあることを確認した。マージの再確認・再実行は不要。
 以後の配置作業用ブランチをcodex/deploy-verificationとしてorigin/mainから作成。Cloudflare初回の配置元はmainで進める。Cloudflareへの実配置・ドメイン公開・有料分析は未実行、今回の承認はコード取り込みについてのもの。
 次のユーザー操作：登録用に追加した「Workers Builds 構成：編集」を外して保存（他の2権限は維持）。元のアプリ作成画面を再読み込みし、登録済みbeino-insight-test-buildを選ぶ。再読み込みで入力が戻った場合の設定はdocs/CLOUDFLARE-DEPLOY.md。作成画面で登録済みキーを選んだ状態とその他設定を確認するまで、デプロイは押させない。再登録用スクリプトやトークン再作成は不要。
+
+### 2026-11-29 初回Cloudflare配置を開始、配置コマンドの修正待ち（最新）
+
+ユーザーがWorkers Builds構成の一時権限を外して保存したと報告。作成画面を再読み込みし、登録済みbeino-insight-test-buildが選択された画面を確認した。プロジェクト名/Build/Deploy/Preview off/Root /を復元、NODE_VERSION24も確認後、専用検証Workerへ配置する内容・公開URLと有料分析は未有効・main更新で自動配置されることを説明し、デプロイ押下を案内。ユーザーが実行し、mainのビルド#570e866eが開始した。追加契約/プラン切替は報告されていない。
+
+実ビルドは成功したが配置段階で`no local hyperdrive connection string`。原因はWrangler4.168.0のOpenNext自動委譲：configを明示しない非dry-run deployがopennextjs-cloudflare deployへ切り替わり、そのgetEnvFromPlatformProxyがローカルHyperdrive初期化を要求した。以前のdry-runはこの委譲をスキップするため再現していなかった。
+本物の外部APIを使わず、架空キー/アカウント＋ローカルHTTP403拒否サーバーで実CLIの2経路を比較。元のdeployは同じエラー、`deploy --config wrangler.json`は委譲なし/Hyperdriveエラーなしで模擬APIのWorker情報取得まで到達（API拒否で意図的に停止）。dummyキャッシュ構成なので、この明示設定でビルド済みentryを直接配置する。
+次のユーザー操作：beino-insight-test → 設定 → ビルド → デプロイコマンドを `npm run check:cf && npx wrangler deploy --config wrangler.json` に変更・保存し再試行。実Cloudflareへの配置成功・DB接続・Supabaseログインはまだ未確認。他の設定変更・パスワード要求・権限の一括追加はしない。再試行もprivate worker配置の同じ範囲なので再承認は不要。新たな契約/公開/有料分析の前は確認。
