@@ -10,13 +10,13 @@ CloudflareのWorkers & Pages → Create application → GitHubで新しいアプ
 | --- | --- |
 | Git repository | `beino-jp/snsanalysis` |
 | Worker / Project name | `beino-insight-test` |
-| Git branch | `codex/prepare-live-validation` |
+| Git branch | `main`（2026-11-29に承認済みPR#1を取り込み済み） |
 | Root directory | リポジトリのルート |
 | Build command | `npm run build:cf` |
 | Deploy command | `npm run check:cf && npx wrangler deploy` |
 | Node version | `24`（ビルド環境のNODE_VERSIONで指定） |
 
-mainには未マージなので、mainをそのまま選ばない。Worker名はwrangler.jsonのnameと一致させる。Save and Deployの前に設定内容と既存プランの利用枠を確認する。新規契約や有料プラン切替が表示された場合はその内容を確認し、ユーザーの承認なしに申し込まない。
+PR#1はユーザー承認後にmainへ取り込み済み。初回はmainを使う。Worker名はwrangler.jsonのnameと一致させる。Save and Deployの前に設定内容と既存プランの利用枠を確認する。新規契約や有料プラン切替が表示された場合はその内容を確認し、ユーザーの承認なしに申し込まない。
 
 Git連携後は選択ブランチへのpushが自動ビルド・配置を起動する。連携前と同じ感覚でpushしない。初回の配置を承認してもらう際に、この継続動作も説明する。別ブランチのPreview buildsは無効にし、同じDBやWorkflowを別プレビューへ複製しない。
 
@@ -37,7 +37,7 @@ Git連携後は選択ブランチへのpushが自動ビルド・配置を起動�
 NODE_VERSIONは当初4の入力だったが24へ修正済みを画面で確認。プロジェクト名・コマンド・プレビュー無効も画面で確認済み。Gitブランチの選択欄は現在の作成フォームに見えておらず、まだ対象ブランチを確定できていない。mainへ未マージのため、この問題を解決する前にデプロイを案内しない。
 
 2026-11-29：ユーザーMacで「ビルド用トークンの登録が完了しました。」の実出力を受領。再登録不要。一時追加したBuilds構成編集の削除と、作成フォームでの登録済みキー選択は次の操作。
-Cloudflare公式の初回ブランチはrepo default branch（main）。今回の作成画面でbranch選択が見えないため、PR#1のmainへの取り込みをユーザーへ確認してから初回配置を進める。取り込み自体はCloudflare配備・有料分析を起動しない（まだGit連携の配置は未実行）。取り込み後はGit branchの設定値をmainにする。専用Workerのビルド連携開始後はmainへのpushが再配置を起動することを説明する。<https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/>
+Cloudflare公式の初回ブランチはrepo default branch（main）。今回の作成画面でbranch選択が見えないため、PR#1をユーザー承認後にmainへ取り込んだ（65790ce）。取り込み自体はCloudflare配備・有料分析を起動しない（まだGit連携の配置は未実行）。初回はmainを使う。専用Workerのビルド連携開始後はmainへのpushが再配置を起動することを説明する。<https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/>
 
 ## 初回配置で作成・使用するもの
 
