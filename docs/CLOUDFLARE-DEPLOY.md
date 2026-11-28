@@ -22,6 +22,20 @@ Git連携後は選択ブランチへのpushが自動ビルド・配置を起動�
 
 公式：<https://developers.cloudflare.com/workers/ci-cd/builds/>、<https://developers.cloudflare.com/workers/ci-cd/builds/configuration/>。
 
+### 手動作成したAPIトークンが候補に出ない場合
+
+ユーザープロファイルでのAPIトークン作成と、Workers Buildsのビルドトークン登録は別。2026-11-29、専用トークンを手動作成後も、作成フォームの一覧にはhatching-lp build tokenと新規作成だけが表示されることを画面で確認した。同じ選択操作や無根拠な再読み込みを繰り返し要求しない。アプリ作成フォーム内の自動作成はR2/D1/全ゾーンのルート等も含むため、手動作成した権限を絞ったものを登録して使う。
+
+ユーザーが作成した `beino-insight-test-build` はbeinoアカウントのWorkersスクリプト編集、アカウント設定読み取りだけ。新しいWorkersのEditorロール（新規作成不可）と、下段の従来のWorkersスクリプト編集を取り違えない。有効期限は画面で2027-02-27、IP制限なし。キー本文は受領していない。
+
+登録は専用トークンにWorkers Builds Configuration（編集。旧名Workers CI編集）を一時追加し、Macで `node scripts/register-cloudflare-build-token.mjs` を使う。独立した標準Node.jsスクリプトなので単体ファイルをダウンロードして実行できる。トークンは非表示入力し、環境ファイル・引数・履歴・ログへ保存しない。
+
+処理はトークン自己検証→許可されたアカウント一覧でbeinoを一意に照合→ビルドトークン一覧→未登録ならPOSTで登録。POSTは1回だけ、同名別キーの上書きなし、既存の他アプリ用キーは変更しない。登録後に一時追加したBuilds Configuration/CI権限を外し、元の2権限へ戻せる。Cloudflareの実登録はまだ行っておらず、3件の架空応答テストとPTYでの入力非表示のみ確認済み。
+
+公式：<https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/>、<https://developers.cloudflare.com/api/resources/workers_builds/subresources/tokens/methods/create/>。登録APIはWorkers CI Writeを要求し、bodyはbuild_token_name/build_token_secret/cloudflare_token_id。APIトークンとbuild_token_uuidを混同しない。
+
+NODE_VERSIONは当初4の入力だったが24へ修正済みを画面で確認。プロジェクト名・コマンド・プレビュー無効も画面で確認済み。Gitブランチの選択欄は現在の作成フォームに見えておらず、まだ対象ブランチを確定できていない。mainへ未マージのため、この問題を解決する前にデプロイを案内しない。
+
 ## 初回配置で作成・使用するもの
 
 - 専用Worker `beino-insight-test`

@@ -243,3 +243,10 @@ SMTP SettingsはEnable custom SMTPオフをスクリーンショットで確認�
 ユーザーのスクリーンショットでRedirect URLsがTotal URLs:1、`https://test.beino-insight.com/auth/finish` と一致することを確認。追加は完了しているので繰り返し要求しない。
 次はCloudflare Workers & Pages → Create application → GitHub → beino-jp/snsanalysisを選び、新規Workerの設定画面へ進むよう案内。アプリ名beino-insight-test、対象ブランチcodex/prepare-live-validation、Build npm run build:cf、Deploy npm run check:cf && npx wrangler deploy。まだSave and Deployの許可・実行はしていない。公式のGit連携手順とビルド変数/実行時Secretsが別である点を確認し、docs/CLOUDFLARE-DEPLOY.mdに手順を整理した。
 実行環境statusを再確認：Cloudflare/Supabaseの秘密・実行時変数・外部認証の設定はない。ユーザーのMacブラウザへ接続する手段も未提供のまま。Cloudflare画面で直接設定してもらい、チャットへキーを送らせない。初回は非公開Workerの配置と認証接続確認、HTTPS公開・本人招待・有料分析はそれぞれ条件が揃ってから扱う。
+
+### 2026-11-29 ビルド用トークン登録が次の操作
+
+ユーザーがCloudflare作成フォームへプロジェクト名beino-insight-test、Build npm run build:cf、Deploy npm run check:cf && npx wrangler deploy、Preview buildsオフ、Root /、NODE_VERSION24を入力済みと画面で確認。Gitブランチ欄はこのフォームに見えておらず、まだcodex/prepare-live-validationに設定できていない。mainへ未マージのままなのでデプロイを案内しない。
+標準の新規ビルドトークンは多数の不要製品/全ゾーン権限を持つため、プロファイルからbeino-insight-test-buildを手動作成。対象beino全体、Workersスクリプト編集（上段の新Workers Editorとは別）、アカウント設定読み取り、期限2027-02-27/IP制限なしを概要で確認。ユーザーが作成・保存を完了したと報告。本文は受領していない。
+誤案内：手動作成したトークンが作成フォームの候補に自動表示されると想定し、同じプルダウン選択/スクリーンショットを何度も要求してしまった。最終的に開いた候補はhatching-lp build tokenと新規作成だけ。ユーザーの操作の問題ではない。公式APIでユーザーAPIトークンとBuilds登録が別管理と確認。hatching-lpキーは変更/流用しない。
+`scripts/register-cloudflare-build-token.mjs` を用意。標準Nodeだけで実行し非表示入力、token verify→beino照合→登録済み一覧→POST /accounts/:id/builds/tokensで既存キーを登録。秘密は保存/印字しない、同名別キー上書き・自動再試行・配備なし。新規3テスト成功、型確認成功（最終出力参照）、PTYで入力非表示成功。ユーザーの専用トークンに一時的なWorkers Builds Configuration編集（旧Workers CI編集）が必要なので次に追加を案内する。値はチャットへ送らせない。実登録はユーザーMacで行い、成功後に一時権限を外せる。ダウンロード用の同一ファイルをattachments/register-cloudflare-build-token.mjsへ用意。
