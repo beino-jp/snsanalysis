@@ -250,3 +250,9 @@ SMTP SettingsはEnable custom SMTPオフをスクリーンショットで確認�
 標準の新規ビルドトークンは多数の不要製品/全ゾーン権限を持つため、プロファイルからbeino-insight-test-buildを手動作成。対象beino全体、Workersスクリプト編集（上段の新Workers Editorとは別）、アカウント設定読み取り、期限2027-02-27/IP制限なしを概要で確認。ユーザーが作成・保存を完了したと報告。本文は受領していない。
 誤案内：手動作成したトークンが作成フォームの候補に自動表示されると想定し、同じプルダウン選択/スクリーンショットを何度も要求してしまった。最終的に開いた候補はhatching-lp build tokenと新規作成だけ。ユーザーの操作の問題ではない。公式APIでユーザーAPIトークンとBuilds登録が別管理と確認。hatching-lpキーは変更/流用しない。
 `scripts/register-cloudflare-build-token.mjs` を用意。標準Nodeだけで実行し非表示入力、token verify→beino照合→登録済み一覧→POST /accounts/:id/builds/tokensで既存キーを登録。秘密は保存/印字しない、同名別キー上書き・自動再試行・配備なし。新規3テスト成功、型確認成功（最終出力参照）、PTYで入力非表示成功。ユーザーの専用トークンに一時的なWorkers Builds Configuration編集（旧Workers CI編集）が必要なので次に追加を案内する。値はチャットへ送らせない。実登録はユーザーMacで行い、成功後に一時権限を外せる。ダウンロード用の同一ファイルをattachments/register-cloudflare-build-token.mjsへ用意。
+
+### 2026-11-29 ビルド用トークンの実登録成功
+
+ユーザーが専用トークンを編集し、検索Workers CIで表示された「Workers Builds 構成」の編集を追加・保存したと報告。その後Macで登録用mjsをダウンロードしてnode実行。非表示入力のため貼り付けが効かないと見えたが、Control+U→Command+Vを一度→Enterを案内し、「ビルド用トークンの登録が完了しました。」の出力を受領。実登録成功が確認できたので、再作成・再登録を案内しない。キー本文はチャットへ受領していない。
+登録にだけ使ったWorkers Builds構成編集は、このあと外す（未完了）。元のアプリ作成画面の選択候補へ反映するには画面再読み込みが必要な可能性があるので、再読み込み時は入力済みの専用名/コマンド/Node24/Preview off/Root /を復元する。まだ登録済みトークンをUIで選べた画面は未確認。
+GitHubを確認：repoはPUBLIC、default branch main、PR#1 OPEN/MERGEABLE、最新headの2つのCI verifyがSUCCESS。mainのpackage.jsonにはbuild:cf/check:cfがまだない。Cloudflare公式Build branchesは初回にrepo default branchを使用し、作成後Settings > Build > Branch controlで変更する手順を記載。作成画面にブランチ選択が見当たらないため、テスト済みPRをmainへ取り込む案をユーザーへ重要事項として確認する。確認が来るまでマージしない。Cloudflare配備/HTTPS公開/有料分析の承認とは分ける。

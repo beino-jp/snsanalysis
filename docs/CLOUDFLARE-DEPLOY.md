@@ -36,6 +36,9 @@ Git連携後は選択ブランチへのpushが自動ビルド・配置を起動�
 
 NODE_VERSIONは当初4の入力だったが24へ修正済みを画面で確認。プロジェクト名・コマンド・プレビュー無効も画面で確認済み。Gitブランチの選択欄は現在の作成フォームに見えておらず、まだ対象ブランチを確定できていない。mainへ未マージのため、この問題を解決する前にデプロイを案内しない。
 
+2026-11-29：ユーザーMacで「ビルド用トークンの登録が完了しました。」の実出力を受領。再登録不要。一時追加したBuilds構成編集の削除と、作成フォームでの登録済みキー選択は次の操作。
+Cloudflare公式の初回ブランチはrepo default branch（main）。今回の作成画面でbranch選択が見えないため、PR#1のmainへの取り込みをユーザーへ確認してから初回配置を進める。取り込み自体はCloudflare配備・有料分析を起動しない（まだGit連携の配置は未実行）。取り込み後はGit branchの設定値をmainにする。専用Workerのビルド連携開始後はmainへのpushが再配置を起動することを説明する。<https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/>
+
 ## 初回配置で作成・使用するもの
 
 - 専用Worker `beino-insight-test`
