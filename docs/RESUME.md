@@ -306,3 +306,5 @@ Workerのドメイン画面は標準URL2つがオフ、Custom Domainなし。追
 ユーザー画面でtest.beino-insight.comのログイン画面表示を確認した。本人の手動操作でSupabase Users → Add user → Send invitationを案内し、招待メールからパスワード設定画面まで到達。その後「設定を完了できませんでした」、通常ログインも失敗した画面を受領。メール配信と公開HTTPS表示は確認できたが、パスワード設定・DB接続・ログイン成功は未確認。実行環境からもGET /loginがHTTP200となった（以前のCONNECT403は解消）。1Passwordの保存候補はアプリの認証成功を意味しない。
 
 原因を推測して秘密設定を入れ替えず、認証処理の段階を特定する診断を実装中。現コードは認証設定、Supabase認証、許可メール、DB接続の例外を全て同一画面メッセージへまとめており、サーバーログもなかった。固定AUTH_FLOW_FAILED / operation / stage / reasonのみを出し、例外本文・メール・パスワード・トークン・接続文字列を残さない。Workers Logsのアプリログを有効、invocationログ/traceを無効、URLクエリを削除する設定を準備した。画面の認証エラーは従来通りで情報を増やさない。実原因は診断後に特定する。
+
+公開済みのGET /api/healthを一度実行しHTTP200 / status okを確認。現行実配置での基本設定検証とHyperdrive経由のSELECT 1は成功している。settingsテーブルの読み書き・Supabase認証・パスワード更新の成功まで示すものではない。診断追加の13テスト・型チェック・check:cf・Cloudflare向けビルドは成功した。OpenNextビルド時のローカルWranglerログパス警告は配備/認証の原因ではなく、ビルド自体は完了。
