@@ -308,3 +308,7 @@ Workerのドメイン画面は標準URL2つがオフ、Custom Domainなし。追
 原因を推測して秘密設定を入れ替えず、認証処理の段階を特定する診断を実装中。現コードは認証設定、Supabase認証、許可メール、DB接続の例外を全て同一画面メッセージへまとめており、サーバーログもなかった。固定AUTH_FLOW_FAILED / operation / stage / reasonのみを出し、例外本文・メール・パスワード・トークン・接続文字列を残さない。Workers Logsのアプリログを有効、invocationログ/traceを無効、URLクエリを削除する設定を準備した。画面の認証エラーは従来通りで情報を増やさない。実原因は診断後に特定する。
 
 公開済みのGET /api/healthを一度実行しHTTP200 / status okを確認。現行実配置での基本設定検証とHyperdrive経由のSELECT 1は成功している。settingsテーブルの読み書き・Supabase認証・パスワード更新の成功まで示すものではない。診断追加の13テスト・型チェック・check:cf・Cloudflare向けビルドは成功した。OpenNextビルド時のローカルWranglerログパス警告は配備/認証の原因ではなく、ビルド自体は完了。
+
+診断用PR#4 https://github.com/beino-jp/snsanalysis/pull/4 を作成・添付。最終head 62d3dfbのCI verify 2件がSUCCESSであることを確認し、SHA指定でsquash mergeした。mainは7ed3d619ce1a9831fe7a197b71419c01b7bd8b03、最終headとのツリー一致も確認。Wrangler dry-runも成功。現在はorigin/mainからcodex/auth-failure-investigationへ進んだ。新しいCloudflare実配置の結果・診断ログはまだ未確認で、ログイン障害が解消したとは言わない。
+
+次はユーザーにCloudflare → beino-insight-test → デプロイの最新ビルドを確認してもらう。失敗ならそのエラーを先に解決する。成功したら本人の既存Supabaseユーザー向けに新しいパスワード回復リンクを手動送信してもらい、一度だけ設定を試す。招待済みユーザーを作り直さず、同じ招待リンクを再利用しない。失敗したらObservability → LogsでAUTH_FLOW_FAILEDのJSON行だけを確認し、stageに対応する原因を特定する。ログにない原因を推測して秘密値を入れ替えない。ユーザーのパスワード／JWT／Cookie／キーは受領しない。新たな実メールの自動送信や有料分析は実行していない。
