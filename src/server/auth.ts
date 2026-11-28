@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { checkSessionVersion,sessionVersion } from "./session-version";
 import { assertConfiguration, isMock } from "./config";
+import { authStep } from "./auth-diagnostics";
 const secret = () =>
   process.env.SESSION_SECRET ?? "local-demo-session-only-do-not-use-in-live";
 export function signSession(email: string, version = "local-demo") {
@@ -31,7 +32,7 @@ export async function requireAuth() {
   return data.email as string;
 }
 export async function requireOrigin() {
-  assertConfiguration();
+  await authStep('configuration',assertConfiguration);
   const h = await headers();
   const origin = h.get("origin");
   const host = h.get("x-forwarded-host") ?? h.get("host");
@@ -50,12 +51,13 @@ export async function createSession(email:string){
   return signSession(email,isMock()&&process.env.DEMO_AUTH==='true'?'local-demo':await sessionVersion(email));
 }
 export async function authenticate(email: string, password: string) {
-  assertConfiguration();
+  await authStep('configuration',assertConfiguration);
   if (isMock() && process.env.DEMO_AUTH === "true") {
     if (password !== (process.env.DEMO_PASSWORD ?? "local-demo"))
       throw Error("LOGIN_FAILED");
     return "demo@reach.local";
   }
+  const user=await authStep('supabase_login',async()=>{
   const client = createClient(
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_ANON_KEY!,
@@ -66,12 +68,16 @@ export async function authenticate(email: string, password: string) {
     password,
   });
   if (error || !data.user) throw Error("LOGIN_FAILED");
+  return data.user;
+  });
+  await authStep('invitation_access',()=>{
   const allowed = (process.env.ALLOWED_EMAILS ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase());
-  if (!allowed.includes(data.user.email?.toLowerCase() ?? ""))
+  if (!allowed.includes(user.email?.toLowerCase() ?? ""))
     throw Error("FORBIDDEN");
-  return data.user.email!;
+  });
+  return user.email!;
 }
 export function cookieOptions() {
   return {

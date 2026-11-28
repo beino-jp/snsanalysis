@@ -300,3 +300,9 @@ Workerのドメイン画面は標準URL2つがオフ、Custom Domainなし。追
 ログイン画面のインターネット公開、許可アカウントだけが分析画面を使える範囲を説明した確認に、ユーザーが「はい」と回答。ドメイン追加の確定を案内した。再承認は不要。同じ承認範囲のPR#2をreadyにし、head 3dfe455のCI verify 2件がSUCCESSであることを確認、SHAを指定してsquash merge。GitHubでMERGED、main f7ad83d3c3d5efb7bd05932f0b4fd9792f01efc7を確認し、origin/mainとのツリー一致も確認した。main更新はCloudflare Git連携の自動配置対象だが、その実配置結果は未確認。
 
 続きの作業はorigin/mainから作ったcodex/public-login-verification。ユーザーのドメイン追加確定・DNS/TLS・実ログイン画面表示はまだ未確認。実行環境からのHTTPS確認はCONNECT proxy 403でHTTP応答に到達せず、アプリの403として扱わない。環境statusはnetwork unrestricted/enforcedであり、アプリの稼働／障害を判断する材料にはならない。ユーザー側でURLを開いた画面とCloudflareの配置結果を確認する。追加の契約・実メール招待送信・有料分析はまだ実行していない。
+
+### 2026-11-29 実招待メールからのパスワード設定失敗を調査（最新）
+
+ユーザー画面でtest.beino-insight.comのログイン画面表示を確認した。本人の手動操作でSupabase Users → Add user → Send invitationを案内し、招待メールからパスワード設定画面まで到達。その後「設定を完了できませんでした」、通常ログインも失敗した画面を受領。メール配信と公開HTTPS表示は確認できたが、パスワード設定・DB接続・ログイン成功は未確認。実行環境からもGET /loginがHTTP200となった（以前のCONNECT403は解消）。1Passwordの保存候補はアプリの認証成功を意味しない。
+
+原因を推測して秘密設定を入れ替えず、認証処理の段階を特定する診断を実装中。現コードは認証設定、Supabase認証、許可メール、DB接続の例外を全て同一画面メッセージへまとめており、サーバーログもなかった。固定AUTH_FLOW_FAILED / operation / stage / reasonのみを出し、例外本文・メール・パスワード・トークン・接続文字列を残さない。Workers Logsのアプリログを有効、invocationログ/traceを無効、URLクエリを削除する設定を準備した。画面の認証エラーは従来通りで情報を増やさない。実原因は診断後に特定する。

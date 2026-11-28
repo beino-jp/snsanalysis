@@ -30,3 +30,9 @@ it('does not retry ambiguous password updates or expose provider response bodies
  const fetcher=vi.fn().mockResolvedValue({ok:false,text:()=>Promise.resolve('secret-provider-response')});vi.stubGlobal('fetch',fetcher);
  await expect(finishPasswordSetup({accessToken:token,password:'a-long-test-password'})).rejects.toThrow('PASSWORD_UPDATE_UNCONFIRMED');expect(fetcher).toHaveBeenCalledTimes(1);
 });
+it('identifies a database failure before changing the password without retaining database error details',async()=>{
+ const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);
+ f.claim.mockRejectedValue(Object.assign(new Error('password-fixture@database-fixture'),{code:'28P01'}));
+ await expect(finishPasswordSetup({accessToken:token,password:'a-long-test-password'})).rejects.toMatchObject({stage:'database_session',message:'28P01'});
+ expect(fetcher).not.toHaveBeenCalled();
+});
