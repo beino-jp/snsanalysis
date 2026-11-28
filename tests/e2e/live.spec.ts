@@ -1,11 +1,15 @@
 import {test,expect} from '@playwright/test';
-import {createHmac} from 'node:crypto';
+import {createHmac,createHash} from 'node:crypto';
+import pg from 'pg';
 test.skip(process.env.E2E_LIVE_FIXTURES!=='true','Requires a local Worker with explicitly configured fake credentials.');
 test.use({launchOptions:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,args:['--no-sandbox']}:undefined});
 for(const viewport of [{width:375,height:812},{width:1440,height:1000}])test(`URL, cost confirmation and aggregate results at ${viewport.width}px`,async({page,context,baseURL})=>{
   if(!baseURL||!['127.0.0.1','localhost'].includes(new URL(baseURL).hostname))throw Error('Local fixture server required');
   await page.setViewportSize(viewport);
-  const body=Buffer.from(JSON.stringify({email:'smoke@example.test',exp:Date.now()+600000})).toString('base64url');
+  const db=new pg.Client({connectionString:'postgresql://reach:reach_local_only@127.0.0.1:5432/reach'});
+  await db.connect();
+  try{await db.query('INSERT INTO settings(id,payload) VALUES($1,$2) ON CONFLICT(id) DO UPDATE SET payload=EXCLUDED.payload',['auth-session:'+createHash('sha256').update('smoke@example.test').digest('hex'),JSON.stringify({version:'fixture-only'})]);}finally{await db.end();}
+  const body=Buffer.from(JSON.stringify({version:'fixture-only',email:'smoke@example.test',exp:Date.now()+600000})).toString('base64url');
   const sig=createHmac('sha256','local-smoke-only-32-character-signature-key').update(body).digest('hex');
   await context.addCookies([{name:'reach-session',value:body+'.'+sig,url:baseURL,httpOnly:true,sameSite:'Strict'}]);
   let started=false,starts=0;

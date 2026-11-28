@@ -1,12 +1,13 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
+import { checkSessionVersion,sessionVersion } from "./session-version";
 import { assertConfiguration, isMock } from "./config";
 const secret = () =>
   process.env.SESSION_SECRET ?? "local-demo-session-only-do-not-use-in-live";
-export function signSession(email: string) {
+export function signSession(email: string, version = "local-demo") {
   const value = Buffer.from(
-    JSON.stringify({ email, exp: Date.now() + 8 * 3600000 }),
+    JSON.stringify({ email, version, exp: Date.now() + 8 * 3600000 }),
   ).toString("base64url");
   return (
     value + "." + createHmac("sha256", secret()).update(value).digest("hex")
@@ -26,10 +27,11 @@ export async function requireAuth() {
   const data = JSON.parse(Buffer.from(body, "base64url").toString());
   if (typeof data.email !== "string" || !Number.isFinite(data.exp) || data.exp < Date.now()) throw Error("UNAUTHORIZED");
   if (!(isMock() && process.env.DEMO_AUTH === "true") && !(process.env.ALLOWED_EMAILS ?? "").split(",").map(s=>s.trim().toLowerCase()).includes(data.email.toLowerCase())) throw Error("UNAUTHORIZED");
+  if (!(isMock() && process.env.DEMO_AUTH === "true") && !(await checkSessionVersion(data.email,data.version))) throw Error("UNAUTHORIZED");
   return data.email as string;
 }
-export async function requireMutation() {
-  const email = await requireAuth();
+export async function requireOrigin() {
+  assertConfiguration();
   const h = await headers();
   const origin = h.get("origin");
   const host = h.get("x-forwarded-host") ?? h.get("host");
@@ -38,7 +40,14 @@ export async function requireMutation() {
     !(process.env.APP_ORIGIN ? origin === new URL(process.env.APP_ORIGIN).origin : new URL(origin).host === host)
   )
     throw Error("FORBIDDEN");
+ }
+export async function requireMutation() {
+  const email=await requireAuth();
+  await requireOrigin();
   return email;
+}
+export async function createSession(email:string){
+  return signSession(email,isMock()&&process.env.DEMO_AUTH==='true'?'local-demo':await sessionVersion(email));
 }
 export async function authenticate(email: string, password: string) {
   assertConfiguration();

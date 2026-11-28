@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticate, cookieOptions, signSession } from "@/server/auth";
+import { authenticate, cookieOptions, createSession, requireOrigin } from "@/server/auth";
 import { z } from "zod";
 const attempts = new Map<string, { n: number; at: number }>();
 export async function POST(req: NextRequest) {
   try {
+    await requireOrigin();
     const origin = req.headers.get("origin");
     if (!origin || new URL(origin).host !== req.headers.get("host"))
       return NextResponse.json(
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       .parse(await req.json());
     const email = await authenticate(input.email, input.password);
     const res = NextResponse.json({ ok: true });
-    res.cookies.set("reach-session", signSession(email), cookieOptions());
+    res.cookies.set("reach-session", await createSession(email), cookieOptions());
     attempts.delete(key);
     return res;
   } catch {

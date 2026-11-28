@@ -219,3 +219,21 @@ Cloudflare設定作成は確認済みだが、アプリから本物のDBへのSQ
 
 ユーザーがsnsanalysisのSQL Editorへattachments/supabase-setup.sql全体を貼り付けRunし、Resultsに「初期設定が完了しました」のresult行が表示されたスクリーンショットを受領。画面末尾はCOMMITとSELECT。初期設定SQLの実行成功を確認したので、同じSQLの再実行は不要。Hyperdrive経由の実アプリ接続確認とは区別する。
 次はSupabase Authentication（左端の南京錠アイコン）を開いて、招待だけのログイン設定を案内。まだ公開サインアップ無効化・招待/SMTP・ログイン実テストは未確認。API/DBパスワードはチャットへ要求しない。
+
+### Supabase認証/メール送信の画面設定（2026-11-28）
+
+ユーザーへAuth Sign In / ProvidersでAllow new users to sign upをオフ、Confirm emailオン維持、Save changesを案内。その後ユーザーは「できた」とURL Configuration/Emails画面を提示。保存後スイッチの直接再確認はしていないので、無効化の実テストは未完了。Site URLにhttps://test.beino-insight.comを保存するよう案内し、ユーザーが保存後Emails画面へ進んだ。Redirect URLsはまだ未設定。
+SMTP SettingsはEnable custom SMTPオフをスクリーンショットで確認。既存hatching.cs/sagyo.aiのpackage依存とsagyo.ai README/環境型からResend使用構成を確認。既存Resendのsagyoaiチームでsagyoai.com Verifiedをユーザー画面で確認。
+ユーザーがResendへbeino-insight.com/Tokyoを追加しAuto configure操作後、Domain added / Checking DNS / Pending画面を受領。Cloudflare承認画面自体の変更範囲は確認前にユーザーが進んだので、既存ドメインへ影響なしと断言しない。新規メール送信・プラン変更は案内していない。
+公開DNSのGoogle DoH照会でresend._domainkeyのTXT(DKIM)とsendのTXT(SPF)を確認。sendのMX回答も存在するが、Resend画面の期待値との一致はまだ未照合。ResendのVerified表示はこれから。SMTP専用APIキーは未作成、SMTP設定もまだ。
+重要な実装残課題：招待/パスワード設定リンクの受取経路がまだない。現ログインはsignInWithPasswordのみ。招待メールを送る前にcallback/パスワード設定を実装して検証し、Redirect URLを具体的に設定する必要がある。現状態で先方への招待を送らせない。
+
+### 招待リンク受取の実装とResend認証完了（2026-11-28 最新）
+
+ユーザーからResendのbeino-insight.comが **Verified** になったと回答を受領。DNS公開照会ではsendのMXがfeedback.forge.rmta.net（Resend Forge）だったため、SESのMXでないという理由で誤設定と判断しない。既存sagyoai.comやproductionキーは変更していない。
+専用Resend APIキーをName beino-insight-supabase-test / Sending access / beino-insight.comで作成するよう案内し、ユーザーが作成済みと回答。SMTP設定はhost smtp.resend.com / port465 / username resend / sender noreply@beino-insight.com / name Reach Insight、Passwordに新APIキー全文を入力するよう案内。ユーザー「できた」を受領したが、保存済み画面・実メール送信は未確認。キー・DBパスワードは受領していない。
+
+`/auth/finish` に招待/回復リンク→12文字以上パスワード2回入力→ログインを実装。標準Site URLへの戻りもフラグメントを受取画面へ渡す。URLからトークンを直ちに消し、ブラウザストレージ/アプリCookieには残さない。サーバーgetUserで検証し、確認済みメールと許可リストを照合してからパスワード更新。同一トークンは一度だけ消費し、パスワード変更時に既存アプリセッションを無効化。成否不明時は自動再試行せず新リンクを案内する。既存settingsテーブルにトークンハッシュと世代情報を置くため、追加SQL手作業は不要。
+
+型チェックとローカルDBを含む92テスト、Cloudflareビルド成功。ブラウザfixtureは5件成功：標準招待URLの転送/URL消去と不一致入力/API失敗時の再実行防止、設定成功後のログイン画面遷移、期限切れ、375px/1440pxで分析費用確認→開始→集計。Supabase認証応答・パスワード更新は単体テストで模擬し、実Supabase/SMTPは未使用。HTTPのno-store/no-referrerヘッダーと375pxのパスワード画面も確認。詳しい画面設定と実確認条件はdocs/AUTH-SETUP.md。
+次はSupabase Authentication → URL Configuration → Redirect URLsへ `https://test.beino-insight.com/auth/finish` を追加するよう案内（まだユーザーの完了報告なし）。その後、専用Workerの秘密設定/実DB接続・HTTPS配備を進める。公開・プラン変更・有料実分析・先方招待は未実施で、重要事項は確認する。

@@ -89,3 +89,7 @@ DBで1回300円を予約し、月間API枠（300〜6000円設定）に対して�
 2026-11-27：型チェック、DBを含む87テスト、Cloudflareビルド成功。ローカルworkerdのHTTPで先方セッションの内部API拒否、ホーム転送、準備中画面200、無効時の新規ジョブ作成拒否を確認。Chromiumの375px/1440pxで入力→確認チェック→開始→集計、横スクロールなしを2件確認。ブラウザE2Eの外部API/費用確認・結果はテスト応答へ置き換えており、実データ完走の検証ではない。
 
 再現には専用のローカルfixture Workerとfakeキーを使う。`E2E_LIVE_FIXTURES=true E2E_BASE_URL=http://127.0.0.1:PORT PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e -- tests/e2e/live.spec.ts`。本物のサービスや共有公開URLに対してこのfixtureテストを実行しない。通常のE2Eでは明示フラグなしに実行されない。
+
+### 招待リンクとパスワード設定（2026-11-28）
+
+`/auth/finish` にSupabase標準の招待・回復リンク受取とパスワード設定を追加。サーバーで本人確認と許可メール照合を行い、同一トークンの再利用を拒否し、パスワード更新時に古いアプリセッションを無効化する。メール送信設定と配備後の検証手順は [AUTH-SETUP.md](AUTH-SETUP.md)。ローカル92テストとCloudflareビルドが成功。SMTP配信・本物の招待ログインは配備後の未完了項目。

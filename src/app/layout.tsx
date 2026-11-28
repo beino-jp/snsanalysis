@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthLinkRouter from "@/components/auth-link-router";
 export const metadata: Metadata = {
   title: "Reach Insight | PRリーチ分析",
   description:
@@ -12,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body><AuthLinkRouter/>{children}</body>
     </html>
   );
 }
