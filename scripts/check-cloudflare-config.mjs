@@ -3,7 +3,9 @@ export function checkCloudflareConfig(c){
  if(c.name!=='beino-insight-test'||c.workers_dev!==false||c.preview_urls!==false)throw Error('専用テストWorkerと無効化された標準URLが必要です');
  if(!Array.isArray(c.routes)||c.routes.length>1||c.routes.some(r=>!r||typeof r!=='object'||r.pattern!=='test.beino-insight.com'||r.custom_domain!==true||Object.keys(r).some(k=>!['pattern','custom_domain'].includes(k))))throw Error('公開先は専用の検証ホストだけを指定してください');
  if(c.compatibility_flags?.includes('nodejs_compat')!==true||c.vars?.APP_ORIGIN!=='https://test.beino-insight.com'||c.vars?.DEMO_AUTH!=='false'||c.vars?.DEPLOY_TARGET!=='cloudflare')throw Error('テスト環境の認証・互換性設定が不正です');
- const allowed=new Set(['APP_ORIGIN','DEPLOY_TARGET','DATA_PROVIDER','LLM_PROVIDER','DEMO_AUTH']);
+ const preparation={LIVE_MONTHLY_API_BUDGET_YEN:'300',OPENAI_MODEL:'gpt-4.1-mini',OPENAI_INPUT_USD_PER_MILLION:'0.4',OPENAI_OUTPUT_USD_PER_MILLION:'1.6'};
+ if(Object.entries(preparation).some(([key,value])=>c.vars?.[key]!==value))throw Error('検証予算と確認済みのモデル単価を設定してください');
+ const allowed=new Set(['APP_ORIGIN','DEPLOY_TARGET','DATA_PROVIDER','LLM_PROVIDER','DEMO_AUTH',...Object.keys(preparation)]);
  if(Object.keys(c.vars??{}).some(k=>!allowed.has(k)))throw Error('秘密はvarsではなく専用環境のSecretsで設定してください');
  if(c.workflows?.some(w=>!((w.name==='beino-insight-test-analysis'&&w.binding==='ANALYSIS_WORKFLOW'&&w.class_name==='AnalysisWorkflow')||(w.name==='beino-insight-test-live-analysis'&&w.binding==='LIVE_ANALYSIS_WORKFLOW'&&w.class_name==='LiveAnalysisWorkflow'))))throw Error('専用の分析Workflow設定が必要です');
  if(c.hyperdrive?.length!==1||c.hyperdrive[0].binding!=='HYPERDRIVE'||!(/^[a-f0-9]{32}$/i.test(c.hyperdrive[0].id))||Object.keys(c.hyperdrive[0]).some(k=>!['binding','id'].includes(k)))throw Error('専用HyperdriveのIDだけを設定してください。接続文字列・パスワードは保存しません');

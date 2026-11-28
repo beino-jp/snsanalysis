@@ -34,7 +34,11 @@
     "DEPLOY_TARGET": "cloudflare",
     "DATA_PROVIDER": "mock",
     "LLM_PROVIDER": "mock",
-    "DEMO_AUTH": "false"
+    "DEMO_AUTH": "false",
+    "LIVE_MONTHLY_API_BUDGET_YEN": "300",
+    "OPENAI_MODEL": "gpt-4.1-mini",
+    "OPENAI_INPUT_USD_PER_MILLION": "0.4",
+    "OPENAI_OUTPUT_USD_PER_MILLION": "1.6"
   },
   "workflows": [
     {

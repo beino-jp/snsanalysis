@@ -320,3 +320,35 @@ Workerのドメイン画面は標準URL2つがオフ、Custom Domainなし。追
 ObservabilityのEventsメニューにLogsという項目があるとの案内は誤り。実際の候補はEvents / Invocations / Traces / Flamegraph / Visualizations。Eventsのまま右上を最後の24時間に変更・更新するとエラー1件が表示された。JST03:39:56の行を開いた画面でoperation=password_setup / stage=password_update / reason=UNCLASSIFIEDを確認。招待検証・許可メール・DBのセッション世代更新とリンク消費トランザクションは既に通っているので、それらを再設定させない。
 
 workerdの実fetchをローカル模擬サービスだけへ接続して比較すると、redirect:errorは「followまたはmanualのみ対応」というTypeErrorとなり、manualではHTTP200になることを再現。これが本番コードの失敗段階と一致した。通信処理をpassword-update.tsへ分離し、manualで送信／非2xxを拒否する修正を準備。Bearer・パスワードを転送先へ送らず、自動再試行しない。実ヘルパーをTypeScript変換してworkerdで実行する回帰テストを追加し、成功、302/307転送拒否、400/503失敗、各1リクエストを確認。Miniflareは既にWrangler依存の同一バージョンをテスト用の直接devDependencyとして明示（新規バージョン変更なし）。型チェックと関連16テスト成功。実際のSupabaseパスワード更新成功は修正配置後の本人確認が残る。
+
+修正PR#5 https://github.com/beino-jp/snsanalysis/pull/5 を作成・添付。Cloudflare向けビルドと明示configのWrangler dry-run成功。最終head d7dbf84のCI verify 2件がSUCCESSであることを確認し、SHA指定でsquash mergeした。mainは078a0a1cc147867584aee72688dbd1203679aa3f、承認対象headとのツリー一致も確認済み。続きはorigin/mainからcodex/verify-password-fixを作成した。自動Cloudflare配置の成功と実パスワード設定成功はまだ未確認。
+
+次はCloudflareの最新「Cloudflareで失敗するパスワード変更通信を修正 (#5)」が準備完了になってから、本人のSupabaseユーザー詳細 → Reset password → Send password recoveryで新しいメールを送り、その新リンクで一度だけ設定する。チャットに貼ったパスワードは再使用せず1Passwordで別のものを生成してもらう。元の招待や回復リンクを再利用しない。成功ならログアウト／再ログインと権限を確認、失敗なら新しいAUTH_FLOW_FAILEDのstage/reasonを確認する。外部への実メール送信やパスワード設定はユーザーが自分の画面で行い、こちらでは秘密値を受領・利用しない。
+
+### 2026-11-29 本人のパスワード設定からログイン成功（最新）
+
+ユーザーが「できたよ」と回答し、reachinsight管理者ダッシュボード、MOCK MODE、モックデータ・外部API課金なしの案内、ジョブ0件の画面を提示した。PR#5の修正後の回復リンクによるパスワード設定からアプリセッション発行と管理者画面への到達が成功したものとして扱う。パスワード値は受領しない。mockは分析データとプロバイダーの設定であり、DEMO_AUTH=falseの実認証は通っている。招待／回復リンクを再発行する手順や秘密設定のやり直しを繰り返さない。
+
+次は画面左下のログアウトアイコン（ソースでtitle=ログアウト、POST /api/logout）からログアウトし、本人のメールと新しく設定したパスワードで通常ログインできることを確認する。まだ通常の再ログイン、期限切れ/許可外メール/クライアント権限の実環境確認と分析ジョブ完走は未確認。有料プロバイダーの有効化や新しい実データ取得は実行していない。利用者管理はIssue#3に記録済み。
+
+### 2026-11-29 ログアウト後の通常ログインも成功（最新）
+
+ログアウトしてメールと新しいパスワードで入り直す操作を案内し、ユーザーから「入れた」と成功報告を受領した。招待／回復リンクに頼らない通常ログインも確認できたため、ログイン障害の対応は完了として扱う。次は既存モックモードで分析ジョブを開始し、Cloudflare WorkflowとDBを通じた結果表示までを実配置で確認する。ダッシュボード中央「デモ分析をはじめる」から入力画面を開く。実データ取得や有料APIの有効化は別の未実施事項。
+
+### 2026-11-29 公開環境のモック分析結果を確認（最新）
+
+ユーザーがダッシュボード → デモ分析をはじめる → デモURLを使う → 見積もり確認へ進み、推定コスト$0.00／モックデータのため無料の画面を確認後、分析を実行した。結果画面で取得ユーザー42人、分析済み公開アカウント37人、鍵アカウント5人と、性別・年代・関心・クロス集計が表示された。モックのジョブ作成から結果表示までが公開環境で動くことを確認した。表示値は架空データであり、実際の人口属性の判定可能率や取得精度を示さない。実データ分析はまだ実行していない。
+
+次は実データ分析の接続準備。キー本体を求めず、ApifyとOpenAIのAPIキーの保管状況だけを質問した。WorkerにAPIFY_TOKEN / OPENAI_API_KEYをシークレット登録する段階ではLIVE_ANALYSIS_ENABLEDを有効化しない。DATA_PROVIDER/LLM_PROVIDERは既存mockのまま、実データ専用/analyze経路を使用する。開始には別途、確認済み単価・月間API予算・実行スイッチが必要。実行直前には投稿1本・コメント最大20・プロフィール最大20・1回300円予約枠の具体的な対象/費用を提示する。過去に実取得済みの投稿を無条件に再取得しない。月間枠は現コードで300〜6000円、固定費込み月額1万円の達成は契約/請求条件の確認が残る。
+
+待機中に実データ用の公開仕様を読み取り確認した（取得実行・有料API呼び出しなし）。Apifyの公開Actorメタデータとlatestビルドに対し、既存validatePricing/validateBuildを適用。投稿apify/instagram-scraper（0.0.884）、コメントapify/instagram-comment-scraper（0.0.699）、プロフィールapify/instagram-profile-scraper（0.0.711）が全て通過した。課金イベントはresult、comment、profile/about-accountで既知仕様と一致。プロフィール追加About取得はfalseを維持する。これは公開仕様の確認時点の結果であり、実行時にも再検査・Build固定が必要。ユーザーの契約残高や実請求を確認したものではない。
+
+OpenAI公式モデル仕様 https://developers.openai.com/api/docs/models/gpt-4.1-mini で入力$0.40/出力$1.60（各100万tokens）の表示を確認。既存の価格ガードと一致するが、モデルはDeprecated表示。公式 https://developers.openai.com/api/docs/deprecations にはGPT-4.1 miniの停止日2027-01-14、推奨置換gpt-6-lunaが掲載されている。現日付2026-11-29では停止日前だが、長期提供前のモデル移行と費用・構造化出力の回帰検証が必要。キーのモデルアクセス権はまだ未確認。自動で別モデルへ切り替えたり、新モデルの料金を推定で設定したりしない。
+
+### 2026-11-29 実データ用APIキーの登録報告と少量検証の準備（最新）
+
+ユーザーがApify/OpenAI両方のキーを持っていると回答。Cloudflare → beino-insight-test → 設定 → ランタイム変数とシークレット、プロダクションにAPIFY_TOKEN / OPENAI_API_KEYをシークレットで登録するよう案内し、「登録できたよ」を受領。値は受領していない。実行スイッチはまだ有効化していない。
+
+次の対象について「前回送ったものでいい」と回答。公開ソースではなく既存のignored .live-test.local.jsonのpostUrlを読み、前回URLを確認できた。ユーザーにURLを再送させる必要はない。実URLや実データをこのメモ／GitHubへ追加しない。既存Macの分析済み結果は保存済みのまま、今回はクラウドの/analyze経路の小規模動作確認という目的・再取得範囲・費用を実行前に提示する。
+
+手入力を減らすため、月間API検証枠300円・既存モデルgpt-4.1-mini・入力0.4/出力1.6 USD per millionをwrangler.varsへ追加する準備を進める。ガードは現在の検証値と一致を検査し、キーやLIVE_ANALYSIS_ENABLEDのvars追加は拒否する。実行スイッチがない限り、キーが揃っていてもliveLimitsで無効になることをテストする。Secretでの有効化は対象／費用の確認後に扱う。

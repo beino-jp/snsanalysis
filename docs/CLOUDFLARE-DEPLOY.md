@@ -78,6 +78,16 @@ Worker → Settings → Variables and Secretsで以下を設定する。ビル�
 
 認証の設定が揃うまでアプリは設定エラーとして拒否する。設定後、初期SQL適用済みのDBへHyperdrive経由で接続できることを実確認する。
 
+## 実データ分析の接続準備
+
+APIFY_TOKEN / OPENAI_API_KEYをプロダクションの実行時Secretへ追加する。キーは1Passwordなどから本人が直接入力し、チャットやリポジトリへ送らない。現在は登録済みとのユーザー報告を受領しているが、実キーの有効性や権限は未検証。
+
+予算とモデル単価は手入力を減らすためwrangler.jsonの通常varsで管理する。検証用のLIVE_MONTHLY_API_BUDGET_YEN=300、OPENAI_MODEL=gpt-4.1-mini、OPENAI_INPUT_USD_PER_MILLION=0.4、OPENAI_OUTPUT_USD_PER_MILLION=1.6を設定し、ガードでも一致を検査する。既存DATA_PROVIDER/LLM_PROVIDERはmockを維持し、実データは専用/analyze経路から扱う。キーとこれらの設定だけでは有料ジョブを開始できない。LIVE_ANALYSIS_ENABLEDはvarsに入れず、対象・費用の承認を得た後に実行時Secretで有効化する。
+
+月間枠はこのアプリが記録するAPI利用・予約に対する枠で、既存Macでの利用や他製品の利用、インフラ固定費は含まない。1回300円の予約も請求書の保証ではない。現在のコードはUSD×300の保守的換算を使い、Actor料金・入力仕様の確認と実行上限を別途検査する。
+
+2026-11-29に公式OpenAIのモデル仕様で0.40/1.60 USD per million tokensを再確認した（https://developers.openai.com/api/docs/models/gpt-4.1-mini）。gpt-4.1-miniは廃止予定で、公式停止日は2027-01-14（https://developers.openai.com/api/docs/deprecations）。継続提供に向けたモデル・価格ガード・構造化出力の移行検証は別途必要。自動的に別モデルへ切り替えない。
+
 ## HTTPS接続と本人テスト
 
 上の設定が完了してから、ユーザーに `test.beino-insight.com` のログイン画面をネット上へ出す範囲を説明し、公開の確認を得る。許可メール以外は認証を拒否するが、ログイン画面自体は公開になる。DNS/Custom Domainの追加と、以降のWrangler配備で維持する設定変更を同時に扱う。検証ホストだけを許可する設定とガード変更はdraftで準備し、公開承認後にmainへ反映する。wildcard、親ドメイン、他製品のドメインや標準URLは許可しない。
