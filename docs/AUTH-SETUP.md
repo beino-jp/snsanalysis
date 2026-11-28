@@ -2,7 +2,7 @@
 
 ## 実配置後に設定・ログインが失敗した場合
 
-利用者画面のエラーだけでは原因を決めない。Cloudflareのbeino-insight-test → Observability → Logsで `AUTH_FLOW_FAILED` を検索し、アプリが出したJSONのoperation / stage / reasonだけを確認する。ログインの入力や招待トークン・Cookie・SQL・DB接続文字列を共有させない。原因が分かるまで招待メールの連続送信や同じパスワード設定リンクの再利用を要求しない。
+利用者画面のエラーだけでは原因を決めない。Cloudflareのbeino-insight-test → Observability → Eventsでエラー行を開き、アプリが出したJSONのeventが `AUTH_FLOW_FAILED` のものについてoperation / stage / reasonだけを確認する。現在のUIにLogsというメニューはない。イベントが空なら右上の時間範囲を「最後の24時間」に変更して更新する。ログインの入力や招待トークン・Cookie・SQL・DB接続文字列を共有させない。原因が分かるまで招待メールの連続送信や同じパスワード設定リンクの再利用を要求しない。
 
 | stage | 確認する箇所 |
 | --- | --- |
@@ -17,6 +17,8 @@
 | session_cookie | アプリのセッション発行 |
 
 診断ログは固定のイベント・段階・許可済みコードだけを出す。例外本文、プロバイダー応答、メール、キー、パスワードは記録しない。Workers Logsはアプリログを有効化し、invocationログとtraceは無効、クエリ文字列は削除する。アカウント別の情報を画面のエラーへ追加しない。
+
+2026-11-29の実エラーはpassword_setup / password_update / UNCLASSIFIED。先行する招待トークン検証・許可メール照合・settingsへのトランザクションは通過済み。Cloudflareのworkerdで再現すると、fetchの `redirect:'error'` が未対応のためTypeErrorとなり、SupabaseへのPUTより前に失敗した。`redirect:'manual'` で送信し、3xxを含む非2xxをアプリ側で拒否する。転送先にBearerやパスワードを送らず、成否不明時の自動再試行もしない。Nodeのfetchモックだけでは見逃すため、実ヘルパーをworkerdで実行する回帰テストを維持する。
 
 2026-11-28。専用Supabase `snsanalysis` と検証URL `https://test.beino-insight.com` を使う。既存サービスの認証・送信キーを流用しない。
 

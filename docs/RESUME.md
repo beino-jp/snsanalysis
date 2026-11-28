@@ -312,3 +312,11 @@ Workerのドメイン画面は標準URL2つがオフ、Custom Domainなし。追
 診断用PR#4 https://github.com/beino-jp/snsanalysis/pull/4 を作成・添付。最終head 62d3dfbのCI verify 2件がSUCCESSであることを確認し、SHA指定でsquash mergeした。mainは7ed3d619ce1a9831fe7a197b71419c01b7bd8b03、最終headとのツリー一致も確認。Wrangler dry-runも成功。現在はorigin/mainからcodex/auth-failure-investigationへ進んだ。新しいCloudflare実配置の結果・診断ログはまだ未確認で、ログイン障害が解消したとは言わない。
 
 次はユーザーにCloudflare → beino-insight-test → デプロイの最新ビルドを確認してもらう。失敗ならそのエラーを先に解決する。成功したら本人の既存Supabaseユーザー向けに新しいパスワード回復リンクを手動送信してもらい、一度だけ設定を試す。招待済みユーザーを作り直さず、同じ招待リンクを再利用しない。失敗したらObservability → LogsでAUTH_FLOW_FAILEDのJSON行だけを確認し、stageに対応する原因を特定する。ログにない原因を推測して秘密値を入れ替えない。ユーザーのパスワード／JWT／Cookie／キーは受領しない。新たな実メールの自動送信や有料分析は実行していない。
+
+### 2026-11-29 パスワード変更の実行環境エラーを再現・修正（最新）
+
+ユーザーがCloudflareの最新バージョンcafe04eb／PR#4の「準備完了」を確認。本人のSupabaseユーザーは存在し、確認済みになっている。詳細画面のReset password → Send password recoveryから新しいリンクで一度だけ設定を試したが、同じエラーとなった。パスワード文字列がチャットに貼られたため、値は一切コード/記録へ転記せず、今後は使わず1Passwordで別のものを生成するよう案内した。長さはアプリの12〜128文字の条件内で、長さを原因と決めない。
+
+ObservabilityのEventsメニューにLogsという項目があるとの案内は誤り。実際の候補はEvents / Invocations / Traces / Flamegraph / Visualizations。Eventsのまま右上を最後の24時間に変更・更新するとエラー1件が表示された。JST03:39:56の行を開いた画面でoperation=password_setup / stage=password_update / reason=UNCLASSIFIEDを確認。招待検証・許可メール・DBのセッション世代更新とリンク消費トランザクションは既に通っているので、それらを再設定させない。
+
+workerdの実fetchをローカル模擬サービスだけへ接続して比較すると、redirect:errorは「followまたはmanualのみ対応」というTypeErrorとなり、manualではHTTP200になることを再現。これが本番コードの失敗段階と一致した。通信処理をpassword-update.tsへ分離し、manualで送信／非2xxを拒否する修正を準備。Bearer・パスワードを転送先へ送らず、自動再試行しない。実ヘルパーをTypeScript変換してworkerdで実行する回帰テストを追加し、成功、302/307転送拒否、400/503失敗、各1リクエストを確認。Miniflareは既にWrangler依存の同一バージョンをテスト用の直接devDependencyとして明示（新規バージョン変更なし）。型チェックと関連16テスト成功。実際のSupabaseパスワード更新成功は修正配置後の本人確認が残る。

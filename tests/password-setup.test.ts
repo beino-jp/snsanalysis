@@ -15,7 +15,7 @@ it('verifies the bearer with Supabase before setting a password and issues a rot
  const cookie=await finishPasswordSetup({accessToken:token,password:'a-long-test-password'});
  expect(f.getUser).toHaveBeenCalledWith(token);expect(f.claim).toHaveBeenCalledWith(token,'tester@example.test');
  expect(fetcher).toHaveBeenCalledTimes(1);
- const [url,init]=fetcher.mock.calls[0];expect(url).toBe('https://example.supabase.co/auth/v1/user');expect(init.method).toBe('PUT');expect(init.redirect).toBe('error');expect(init.headers.Authorization).toBe('Bearer '+token);
+ const [url,init]=fetcher.mock.calls[0];expect(url).toBe('https://example.supabase.co/auth/v1/user');expect(init.method).toBe('PUT');expect(init.redirect).toBe('manual');expect(init.headers.Authorization).toBe('Bearer '+token);
  const payload=JSON.parse(Buffer.from(cookie.split('.')[0],'base64url').toString());expect(payload.email).toBe('tester@example.test');expect(payload.version).toBe('new-version');expect(JSON.stringify(payload)).not.toContain(token);
 });
 it('rejects expired, unconfirmed and uninvited users before changing credentials',async()=>{

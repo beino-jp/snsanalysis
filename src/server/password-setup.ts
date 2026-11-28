@@ -4,6 +4,7 @@ import {assertConfiguration} from './config';
 import {signSession} from './auth';
 import {claimPasswordLink} from './session-version';
 import {authStep} from './auth-diagnostics';
+import {updateSupabasePassword} from './password-update';
 export const passwordInput=z.object({accessToken:z.string().min(20).max(6000),password:z.string().min(12).max(128)});
 export async function finishPasswordSetup(raw:unknown){
  await authStep('configuration',assertConfiguration);
@@ -27,9 +28,6 @@ export async function finishPasswordSetup(raw:unknown){
  });
  const version=await authStep('database_session',()=>claimPasswordLink(accessToken,email));
  // Same authenticated endpoint as supabase-js updateUser, without persisting a refresh token.
- await authStep('password_update',async()=>{
- const response=await fetch(base.origin+'/auth/v1/user',{method:'PUT',redirect:'error',headers:{apikey:process.env.SUPABASE_ANON_KEY!,Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({password}),signal:AbortSignal.timeout(15000)});
- if(!response.ok)throw Error('PASSWORD_UPDATE_UNCONFIRMED');
- });
+ await authStep('password_update',()=>updateSupabasePassword(base.origin,process.env.SUPABASE_ANON_KEY!,accessToken,password));
  return authStep('session_cookie',()=>signSession(email,version));
 }
