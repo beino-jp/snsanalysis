@@ -256,3 +256,41 @@ SMTP SettingsはEnable custom SMTPオフをスクリーンショットで確認�
 ユーザーが専用トークンを編集し、検索Workers CIで表示された「Workers Builds 構成」の編集を追加・保存したと報告。その後Macで登録用mjsをダウンロードしてnode実行。非表示入力のため貼り付けが効かないと見えたが、Control+U→Command+Vを一度→Enterを案内し、「ビルド用トークンの登録が完了しました。」の出力を受領。実登録成功が確認できたので、再作成・再登録を案内しない。キー本文はチャットへ受領していない。
 登録にだけ使ったWorkers Builds構成編集は、このあと外す（未完了）。元のアプリ作成画面の選択候補へ反映するには画面再読み込みが必要な可能性があるので、再読み込み時は入力済みの専用名/コマンド/Node24/Preview off/Root /を復元する。まだ登録済みトークンをUIで選べた画面は未確認。
 GitHubを確認：repoはPUBLIC、default branch main、PR#1 OPEN/MERGEABLE、最新headの2つのCI verifyがSUCCESS。mainのpackage.jsonにはbuild:cf/check:cfがまだない。Cloudflare公式Build branchesは初回にrepo default branchを使用し、作成後Settings > Build > Branch controlで変更する手順を記載。作成画面にブランチ選択が見当たらないため、テスト済みPRをmainへ取り込む案をユーザーへ重要事項として確認する。確認が来るまでマージしない。Cloudflare配備/HTTPS公開/有料分析の承認とは分ける。
+
+### 2026-11-29 mainへの取り込みを承認・実行済み（最新）
+
+ユーザーがmain取り込みの確認に「進めてください」と回答。PR#1のhead 012cb51の2件のCI verify SUCCESSを確認後、そのSHAを指定してsquash mergeした。GitHubでMERGEDを確認し、mainのcommitは65790ce5c8130246e8c79700494d0c48f7585df6。origin/mainをfetchし、承認済みheadとツリーが完全一致すること、mainにbuild:cf/check:cfがあることを確認した。マージの再確認・再実行は不要。
+以後の配置作業用ブランチをcodex/deploy-verificationとしてorigin/mainから作成。Cloudflare初回の配置元はmainで進める。Cloudflareへの実配置・ドメイン公開・有料分析は未実行、今回の承認はコード取り込みについてのもの。
+次のユーザー操作：登録用に追加した「Workers Builds 構成：編集」を外して保存（他の2権限は維持）。元のアプリ作成画面を再読み込みし、登録済みbeino-insight-test-buildを選ぶ。再読み込みで入力が戻った場合の設定はdocs/CLOUDFLARE-DEPLOY.md。作成画面で登録済みキーを選んだ状態とその他設定を確認するまで、デプロイは押させない。再登録用スクリプトやトークン再作成は不要。
+
+### 2026-11-29 初回Cloudflare配置を開始、配置コマンドの修正待ち（最新）
+
+ユーザーがWorkers Builds構成の一時権限を外して保存したと報告。作成画面を再読み込みし、登録済みbeino-insight-test-buildが選択された画面を確認した。プロジェクト名/Build/Deploy/Preview off/Root /を復元、NODE_VERSION24も確認後、専用検証Workerへ配置する内容・公開URLと有料分析は未有効・main更新で自動配置されることを説明し、デプロイ押下を案内。ユーザーが実行し、mainのビルド#570e866eが開始した。追加契約/プラン切替は報告されていない。
+
+実ビルドは成功したが配置段階で`no local hyperdrive connection string`。原因はWrangler4.168.0のOpenNext自動委譲：configを明示しない非dry-run deployがopennextjs-cloudflare deployへ切り替わり、そのgetEnvFromPlatformProxyがローカルHyperdrive初期化を要求した。以前のdry-runはこの委譲をスキップするため再現していなかった。
+本物の外部APIを使わず、架空キー/アカウント＋ローカルHTTP403拒否サーバーで実CLIの2経路を比較。元のdeployは同じエラー、`deploy --config wrangler.json`は委譲なし/Hyperdriveエラーなしで模擬APIのWorker情報取得まで到達（API拒否で意図的に停止）。dummyキャッシュ構成なので、この明示設定でビルド済みentryを直接配置する。
+次のユーザー操作：beino-insight-test → 設定 → ビルド → デプロイコマンドを `npm run check:cf && npx wrangler deploy --config wrangler.json` に変更・保存し再試行。実Cloudflareへの配置成功・DB接続・Supabaseログインはまだ未確認。他の設定変更・パスワード要求・権限の一括追加はしない。再試行もprivate worker配置の同じ範囲なので再承認は不要。新たな契約/公開/有料分析の前は確認。
+
+### 2026-11-29 Cloudflareへの初回配置成功（最新）
+
+ユーザーが設定→ビルド構成の右側デプロイコマンドを明示config付きに変更して保存・再試行し、ビルド#70fd5b0dの緑チェックと「成功した」の報告を受領。main、専用beino-insight-test-build、Build npm run build:cf、Deploy npm run check:cf && npx wrangler deploy --config wrangler.json、Root /、NODE_VERSIONの設定を画面で確認。ログのNode24.22.3/npm10.9.2、npm監査0件も表示。初回の配置成功として扱い、同じコマンド修正やトークン作成を繰り返さない。追加契約/プラン変更は報告されていないが利用料ゼロとは断言しない。
+次はbeino-insight-testの設定→「変数とシークレット」→追加を開いてもらい、アプリ実行時のSUPABASE_URL / SUPABASE_ANON_KEY / SESSION_SECRET / ALLOWED_EMAILS / ADMIN_EMAILSをSecretとして登録する。ビルド設定にあるNODE_VERSIONとは別の領域。Secretにして後続のWrangler配備で手入力の通常varsが消えることを避ける。キー本体や署名鍵はチャット/スクリーンショットへ要求しない。まず空の追加画面を案内する。
+実DBへのSQL・実Supabase認証・SMTP配信・ユーザー招待・HTTPSドメイン公開・新しい有料分析は依然未確認/未実施。コードは公開ルートなしのまま。docs修正のPR#2はdraftで、mainへの反映は手動実行時Secrets設定中の自動再配備を避けて保留する。
+
+### 2026-11-29 実行時Secretsの登録報告とアカウント管理Issue（最新）
+
+SUPABASE_URLとSUPABASE_ANON_KEYは、実行時設定一覧のシークレット／暗号化された値として画面で確認済み。SESSION_SECRETはMacで生成して値を表示せずコピーする手順を案内し、ユーザーから登録完了報告を受領。ALLOWED_EMAILSとADMIN_EMAILSも本人のメールをシークレットで登録するよう案内し、完了報告を受領した。実際の秘密値は受領していない。後者3項目の一覧・実DB接続・ログイン・実メール配信はまだ未確認。Deployを途中で押したことだけを理由に正しいSUPABASE_URLを消す必要はなく、そのまま維持する案内で解決した。
+
+ユーザーが「先々はプロダクトの管理画面からやれるようにissueを書いて」と明示依頼。既存Issueがないことを確認し、Issue #3 https://github.com/beino-jp/snsanalysis/issues/3 を作成。管理画面からの招待、既定クライアント権限、権限変更、停止、DBへの許可リスト移行、既存セッションへの反映、最後の管理者保護、監査、再デプロイ不要を受け入れ条件に記載した。機能実装・実招待送信は未実施。インフラ接続は初回中心だが、現状の利用者追加には手動招待と許可リスト更新が毎回必要なことを説明する。
+
+次は実行時シークレット5項目の名前と種別を値が伏せられた一覧で確認し、認証接続とHTTPS公開の準備を進める。mainへの反映は引き続き保留し、PR#2のdraftブランチだけへ記録する。公開ルートなし／実API分析なしは継続。
+
+### 2026-11-29 HTTPS接続の確定直前（最新）
+
+実行時設定一覧の画面でADMIN_EMAILS / ALLOWED_EMAILS / SESSION_SECRET / SUPABASE_ANON_KEY / SUPABASE_URLが全てシークレットとして存在すること、専用2WorkflowとHyperdriveのバインディングを確認した。値・実認証・実SQLは未検証。
+
+Workerのドメイン画面は標準URL2つがオフ、Custom Domainなし。追加UIの最初の入力はゾーン検索であり、完全なtest.beino-insight.comを入れる案内は誤りだった。同一beinoアカウントのドメイン一覧でbeino-insight.comがアクティブと確認し、再購入・再オンボードはしていない。親ゾーン選択→サブドメインtest→有効化対象「本番」の画面まで到達した。「本番」は検証用Workerの通常版で、追加ボタンはまだ未押下。
+
+次の自動配置でドメイン設定を維持するため、draftのPR#2へwrangler.jsonのcustom_domain test.beino-insight.comと厳密な許可ガードを準備。標準URLは無効のまま、空routes（初回非公開）も許容するが、親ホスト・wildcard・他ホスト・追加パラメータは拒否。設定／セッションアクセスの6テストとcheck:cfが成功した。mainへは未反映、公開変更は未実行。ユーザーへログイン画面が外部公開されることと許可アカウント限定であることを説明し、公開承認を得てから追加確定・main反映を進める。カスタムドメインのAPI権限不足は実エラーで必要範囲を確認し、黄色い一覧の一括付与はしない。
+
+明示configのWrangler dry-runも成功し、82静的ファイル・専用バインディングを含むパッケージ作成を確認。ホスト環境のグローバル設定ディレクトリ不足はXDG_CONFIG_HOMEとWRANGLER_LOG_PATHを/tmpの専用パスへ向けて解決した。実アップロード・ルート反映・認証接続の成功を示すものではない。PR#2は現範囲に合わせてタイトル／本文を更新、draftを維持。
