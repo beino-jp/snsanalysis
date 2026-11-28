@@ -1,3 +1,4 @@
+import {dispatchCloudflare} from "./cloudflare-dispatch";
 import { randomUUID } from "node:crypto";
 import { query } from "./db";
 import {
@@ -55,6 +56,7 @@ export async function registerCampaign(raw: unknown) {
     "INSERT INTO discovery_jobs(id,plan,provider,budget_yen) VALUES($1,$2,'mock',$3)",
     [id, JSON.stringify(plan), SEARCH_BUDGET_JPY],
   );
+  await dispatchCloudflare(id,"discovery");
   return id;
 }
 export async function listCampaigns() {

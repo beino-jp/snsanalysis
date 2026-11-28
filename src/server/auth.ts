@@ -1,12 +1,13 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
+import { checkSessionVersion,sessionVersion } from "./session-version";
 import { assertConfiguration, isMock } from "./config";
 const secret = () =>
   process.env.SESSION_SECRET ?? "local-demo-session-only-do-not-use-in-live";
-export function signSession(email: string) {
+export function signSession(email: string, version = "local-demo") {
   const value = Buffer.from(
-    JSON.stringify({ email, exp: Date.now() + 8 * 3600000 }),
+    JSON.stringify({ email, version, exp: Date.now() + 8 * 3600000 }),
   ).toString("base64url");
   return (
     value + "." + createHmac("sha256", secret()).update(value).digest("hex")
@@ -24,19 +25,29 @@ export async function requireAuth() {
   )
     throw Error("UNAUTHORIZED");
   const data = JSON.parse(Buffer.from(body, "base64url").toString());
-  if (data.exp < Date.now()) throw Error("UNAUTHORIZED");
+  if (typeof data.email !== "string" || !Number.isFinite(data.exp) || data.exp < Date.now()) throw Error("UNAUTHORIZED");
+  if (!(isMock() && process.env.DEMO_AUTH === "true") && !(process.env.ALLOWED_EMAILS ?? "").split(",").map(s=>s.trim().toLowerCase()).includes(data.email.toLowerCase())) throw Error("UNAUTHORIZED");
+  if (!(isMock() && process.env.DEMO_AUTH === "true") && !(await checkSessionVersion(data.email,data.version))) throw Error("UNAUTHORIZED");
   return data.email as string;
 }
-export async function requireMutation() {
-  await requireAuth();
+export async function requireOrigin() {
+  assertConfiguration();
   const h = await headers();
   const origin = h.get("origin");
   const host = h.get("x-forwarded-host") ?? h.get("host");
   if (
     !origin ||
-    !(origin === process.env.APP_ORIGIN || new URL(origin).host === host)
+    !(process.env.APP_ORIGIN ? origin === new URL(process.env.APP_ORIGIN).origin : new URL(origin).host === host)
   )
     throw Error("FORBIDDEN");
+ }
+export async function requireMutation() {
+  const email=await requireAuth();
+  await requireOrigin();
+  return email;
+}
+export async function createSession(email:string){
+  return signSession(email,isMock()&&process.env.DEMO_AUTH==='true'?'local-demo':await sessionVersion(email));
 }
 export async function authenticate(email: string, password: string) {
   assertConfiguration();
@@ -70,4 +81,18 @@ export function cookieOptions() {
     path: "/",
     maxAge: 8 * 3600,
   };
+}
+
+export function internalEmail(email:string){
+  return (isMock() && process.env.DEMO_AUTH==='true') || (process.env.ADMIN_EMAILS??'').split(',').map(e=>e.trim().toLowerCase()).includes(email.toLowerCase());
+}
+export async function requireInternalAuth(){
+  const email=await requireAuth();
+  if(!internalEmail(email))throw Error('FORBIDDEN');
+  return email;
+}
+export async function requireInternalMutation(){
+  const email=await requireMutation();
+  if(!internalEmail(email))throw Error('FORBIDDEN');
+  return email;
 }

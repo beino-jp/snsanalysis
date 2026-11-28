@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireMutation } from "@/server/auth";
+import { requireInternalMutation as requireMutation } from "@/server/auth";
 import { proposeCampaign } from "@/server/campaigns";
 export async function POST(req: NextRequest) {
   try {

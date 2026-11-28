@@ -6,7 +6,7 @@
 
 - 社内利用。利用者は5人未満。
 - 月額運用予算は10,000円以内を目指す。固定費・API利用料・税・為替余裕を含めて管理する。
-- ドメインは未取得。取得後はCloudflareでDNSを管理する。
+- ドメイン `beino-insight.com` をCloudflareで取得済み。検証用は `test.beino-insight.com` を使用する方針。
 - コード管理先は `beino-jp/snsanalysis`。
 - Instagramを優先。X対応は後続。
 - PR投稿に反応したユーザーの公開情報から属性・関心を集計する。
@@ -23,11 +23,13 @@
 ## アカウントの準備状況
 
 - GitHub：リポジトリあり。
-- OpenAI：既存アカウントあり。専用Project・キーは準備予定。
-- Supabase・Apify：未作成。
-- ドメイン・本番サーバー：未契約。
+- OpenAI：専用Project・キーを作成済み。Macで疎通確認済み。
+- Supabase・Apify：アカウント作成済み。ApifyはMacで投稿情報と少量コメントの取得を確認済み。
+- ドメイン：取得済み（2026-11-27確認）。サーバー：未契約。
 
-## 構成案（サービス選定・契約は未確定）
+## 構成方針（2026-11-27訂正）
+
+Cloudflare Workers + 分析処理の永続的な段階実行 + Supabaseを第一候補とする。専用VPS契約は不要。根拠と必要変更は [CLOUDFLARE-ARCHITECTURE.md](CLOUDFLARE-ARCHITECTURE.md) を参照。以下は過去の比較案で、VPSは必須条件ではない。
 
 固定費を抑える案：Cloudflare DNS + 小型VPS（Next.js・API・ワーカー）+ Supabase（PostgreSQL・招待制認証）+ Apify + OpenAI。
 Vercelを使う案も検討したが、ワーカー用サーバーとの費用をまとめるため、初期はVPSに寄せる案を提示。
@@ -88,3 +90,7 @@ VPSのOS更新、TLS、ファイアウォール、監視、バックアップを
 READMEで起動し、REQUIREMENTS.md・docs/CAMPAIGNS.md・docs/P0.mdを読む。
 モックで完成している部分と、本番API・認証・予算管理の未接続部分を混同しない。
 GitHubへ公開するのはソース・架空データ・設計資料のみ。.env・実データ・APIキー・会話原文は含めない。
+
+## 先方によるテストの目標
+
+今回の実データ検証後、共有開発環境で先方が試せる状態まで実装を進める。手順と公開前の受け入れ条件は [TEST-ENVIRONMENT.md](TEST-ENVIRONMENT.md) を参照。

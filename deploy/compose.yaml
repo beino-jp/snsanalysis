@@ -1,0 +1,54 @@
+# Optional VPS fallback only. Primary plan: docs/CLOUDFLARE-ARCHITECTURE.md
+name: reach-insight-test
+x-app: &app
+  build:
+    context: ..
+  image: reach-insight-test:local
+  env_file: test.env
+  init: true
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+services:
+  migrate:
+    <<: *app
+    command: [node, node_modules/tsx/dist/cli.mjs, scripts/setup-db.ts]
+    restart: "no"
+  web:
+    <<: *app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    expose: ["3000"]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  worker:
+    <<: *app
+    command: [node, node_modules/tsx/dist/cli.mjs, src/worker/index.ts]
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+  proxy:
+    image: caddy:2-alpine
+    env_file: test.env
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  caddy_data:
+  caddy_config:

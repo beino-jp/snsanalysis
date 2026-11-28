@@ -1,0 +1,52 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "beino-insight-test",
+  "main": "cloudflare/entry.mjs",
+  "compatibility_date": "2026-11-27",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "APP_ORIGIN": "https://test.beino-insight.com",
+    "DEPLOY_TARGET": "cloudflare",
+    "DATA_PROVIDER": "mock",
+    "LLM_PROVIDER": "mock",
+    "DEMO_AUTH": "false"
+  },
+  "workflows": [
+    {
+      "name": "beino-insight-test-analysis",
+      "binding": "ANALYSIS_WORKFLOW",
+      "class_name": "AnalysisWorkflow",
+      "concurrency": {
+        "limit": 1
+      }
+    },
+    {
+      "name": "beino-insight-test-live-analysis",
+      "binding": "LIVE_ANALYSIS_WORKFLOW",
+      "class_name": "LiveAnalysisWorkflow",
+      "concurrency": {
+        "limit": 1
+      }
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "0 0 * * *"
+    ]
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "01a91508d92d4491aa2a72c17d6c96ca"
+    }
+  ]
+}

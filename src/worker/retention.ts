@@ -31,6 +31,12 @@ export async function deleteExpiredJob(id: string) {
   return true;
 }
 export async function cleanupExpired() {
+  await query("UPDATE live_analyses SET status='manual_check_required',error='処理の完了を確認できませんでした。再実行せず管理者へお問い合わせください。' WHERE status IN ('queued','acquiring','profiles','analyzing') AND created_at<now()-interval '1 hour'");
+  // Removing personal checkpoints must not refund an unresolved billing reservation.
+  await query("DELETE FROM live_analyses WHERE created_at<now()-interval '90 days'");
+  await query(
+    "DELETE FROM validation_reports WHERE created_at<now()-interval '90 days'",
+  );
   await query(
     "DELETE FROM discovery_jobs WHERE created_at<now()-interval '90 days'",
   );

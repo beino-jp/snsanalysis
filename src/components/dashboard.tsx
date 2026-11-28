@@ -45,6 +45,7 @@ import { DEMO_URL } from "@/fixtures/demo";
 import { Group, percent } from "@/domain/aggregation";
 import AnalyzedUsers from "./analyzed-users";
 import CampaignDiscovery from "./campaign-discovery";
+import ValidationReports from "./validation-reports";
 import type { AnalyzedUser } from "@/domain/analyzed-users";
 type Estimate = {
   target: { owner: string; likes: number; comments: number; caption: string };
@@ -113,7 +114,7 @@ async function api<T>(url: string, body?: unknown): Promise<T> {
         }
       : { cache: "no-store" },
   );
-  const b = await r.json();
+  const b = (await r.json()) as T & { error?: string };
   if (r.status === 401) {
     location.href = "/login";
     throw Error("認証が必要です");
@@ -256,17 +257,19 @@ export default function Dashboard() {
         .includes(query.toLowerCase()),
   );
   const title =
-    page === "discovery"
-      ? "目的から候補を探す"
-      : page === "settings"
-        ? "分析設定"
-        : page === "privacy"
-          ? "データとプライバシー"
-          : page === "jobs"
-            ? "案件・ジョブ一覧"
-            : page === "result"
-              ? "分析結果"
-              : "ダッシュボード";
+    page === "live"
+      ? "実データの取得記録"
+      : page === "discovery"
+        ? "目的から候補を探す"
+        : page === "settings"
+          ? "分析設定"
+          : page === "privacy"
+            ? "データとプライバシー"
+            : page === "jobs"
+              ? "案件・ジョブ一覧"
+              : page === "result"
+                ? "分析結果"
+                : "ダッシュボード";
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -306,6 +309,15 @@ export default function Dashboard() {
             <Search size={19} />
             <span>候補を探す</span>
           </button>
+          <button
+            className={"nav-item " + (page === "live" ? "active" : "")}
+            onClick={() => navigate("live")}
+            title="実データの取得記録"
+          >
+            <Database size={19} />
+            <span>実データの取得記録</span>
+          </button>
+          <a className="nav-item" href="/analyze"><Link2 size={18}/><span>投稿を分析する</span></a>
           <button
             className={"nav-item " + (page === "settings" ? "active" : "")}
             onClick={() => navigate("settings")}
@@ -354,7 +366,7 @@ export default function Dashboard() {
           </div>
           <div className="topbar-right">
             <span className="pill">
-              <span>MOCK MODE</span>
+              <span>{page === "live" ? "取得記録" : "MOCK MODE"}</span>
             </span>
             <span className="small">Instagram MVP</span>
             <div className="user-avatar">RI</div>
@@ -380,7 +392,9 @@ export default function Dashboard() {
               </button>
             </div>
           )}
-          {page === "discovery" ? (
+          {page === "live" ? (
+            <ValidationReports />
+          ) : page === "discovery" ? (
             <CampaignDiscovery jobs={jobs} />
           ) : page === "result" && selected ? (
             <Result
@@ -709,7 +723,7 @@ function NewAnalysis({
   onCreated: (id: string) => void;
 }) {
   const [url, setUrl] = useState(""),
-    [project, setProject] = useState("GINZA SIX アイススケート"),
+    [project, setProject] = useState(""),
     [reference, setReference] = useState("execution"),
     [estimate, setEstimate] = useState<Estimate | null>(null),
     [busy, setBusy] = useState(false),
@@ -755,12 +769,12 @@ function NewAnalysis({
     try {
       if (!estimate)
         setEstimate(
-          await api<Estimate>("/api/estimate", { url, project, reference }),
+          await api<Estimate>("/api/estimate", { url, project: project.trim() || "投稿の分析", reference }),
         );
       else {
         const result = await api<{ id: string }>("/api/jobs", {
           url,
-          project,
+          project: project.trim() || "投稿の分析",
           reference,
         });
         onCreated(result.id);
@@ -819,17 +833,7 @@ function NewAnalysis({
                   Instagramの公開投稿・リールのURLを登録してください。
                 </p>
                 <label>
-                  案件名
-                  <input
-                    autoFocus
-                    required
-                    maxLength={100}
-                    value={project}
-                    onChange={(e) => setProject(e.target.value)}
-                  />
-                </label>
-                <label>
-                  PR投稿のURL
+                  Instagram投稿のURL
                   <button
                     className="sample-button"
                     type="button"
@@ -839,12 +843,16 @@ function NewAnalysis({
                   </button>
                   <input
                     type="url"
+                    autoFocus
                     required
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://www.instagram.com/p/.../"
                   />
                 </label>
+                <details style={{margin:"18px 0"}}>
+                  <summary style={{cursor:"pointer"}}>案件名・詳細設定（任意）</summary>
+                  <label>案件名<input maxLength={100} value={project} onChange={e=>setProject(e.target.value)} placeholder="例：冬の新商品PR（空欄でも進めます）" /></label>
                 <label>
                   分析の基準日
                   <select
@@ -865,6 +873,7 @@ function NewAnalysis({
                     基準日時から過去365日以内の投稿を分析します。
                   </div>
                 </label>
+                </details>
                 <div className="demo-banner" style={{ marginBottom: 0 }}>
                   <Database size={18} />
                   <div>
@@ -877,7 +886,7 @@ function NewAnalysis({
                 <span className="pill">
                   <Instagram size={14} /> Instagram
                 </span>
-                <h3 style={{ marginTop: 14 }}>{project}</h3>
+                <h3 style={{ marginTop: 14 }}>{project.trim() || "投稿の分析"}</h3>
                 <p className="muted small">@{estimate.target.owner}</p>
                 <div className="estimate-grid">
                   <div className="estimate-cell">

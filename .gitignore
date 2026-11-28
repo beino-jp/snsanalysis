@@ -11,3 +11,9 @@ coverage/
 .DS_Store
 attachments/
 *.zip
+*.local.json
+deploy/test.env
+
+.open-next/
+.wrangler/
+.dev.vars*

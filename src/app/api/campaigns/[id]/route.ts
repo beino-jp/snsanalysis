@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/server/auth";
+import { requireInternalAuth as requireAuth } from "@/server/auth";
 import { campaignDetail } from "@/server/campaigns";
 export async function GET(
   _: NextRequest,

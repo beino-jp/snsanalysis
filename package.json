@@ -4,41 +4,54 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "node scripts/dev.mjs --production",
     "worker": "tsx src/worker/index.ts",
     "db:setup": "tsx scripts/setup-db.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "p0": "tsx scripts/compare-actors.ts"
+    "p0": "tsx scripts/compare-actors.ts",
+    "connections:check": "node scripts/check-connections.mjs",
+    "p0:probe": "node scripts/probe-instagram.mjs",
+    "build:cf": "node scripts/check-cloudflare-config.mjs && opennextjs-cloudflare build",
+    "preview:cf": "wrangler dev --local",
+    "check:cf": "node scripts/check-cloudflare-config.mjs"
   },
   "dependencies": {
-    "next": "^15.5.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "pg": "^8.16.0",
-    "zod": "^3.25.0",
-    "recharts": "^3.0.0",
-    "lucide-react": "^0.468.0",
-    "apify-client": "^2.12.0",
-    "openai": "^5.0.0",
     "@supabase/ssr": "^0.6.0",
     "@supabase/supabase-js": "^2.50.0",
-    "dotenv": "^16.5.0"
+    "apify-client": "^2.12.0",
+    "dotenv": "^16.5.0",
+    "lucide-react": "^0.468.0",
+    "next": "16.4.5",
+    "openai": "7.65.0",
+    "pg": "^8.16.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^3.0.0",
+    "zod": "4.6.7"
   },
   "devDependencies": {
-    "typescript": "^5.8.0",
+    "@cloudflare/workers-types": "5.20261127.1",
+    "@opennextjs/cloudflare": "1.20.19",
+    "@playwright/test": "^1.52.0",
+    "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.15.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/pg": "^8.15.0",
-    "tailwindcss": "^4.1.0",
-    "@tailwindcss/postcss": "^4.1.0",
-    "vitest": "^3.2.0",
-    "tsx": "^4.19.0",
     "concurrently": "^9.1.0",
-    "@playwright/test": "^1.52.0"
+    "rclone.js": "0.6.6",
+    "tailwindcss": "^4.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0",
+    "vitest": "5.1.2",
+    "wrangler": "4.168.0"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "basic-ftp": "6.2.6",
+    "adm-zip": "0.6.1"
+  }
 }
