@@ -214,3 +214,8 @@ Supabaseの「snsanalysis」は今回のアプリ専用とのユーザー回答�
 接続方法wrangler.jsoncのスクリーンショットでHyperdrive ID `01a91508d92d4491aa2a72c17d6c96ca` とbinding HYPERDRIVEを確認し、wrangler.jsonに反映。IDは認証秘密ではない。接続文字列/ローカルDBパスワードはwrangler設定に含めず、ガードで禁止。
 Cloudflare設定作成は確認済みだが、アプリから本物のDBへのSQL実行は未確認。既存Worker/DNS/ルート変更・公開・有料取得はまだ。
 次はSupabase SQL Editorでアプリ初期設定を行う。`scripts/export-supabase-setup.ts` が既存schema+RLS+default設定をトランザクション付きの `attachments/supabase-setup.sql` にオフライン出力。専用DBだけで使い、21テーブル作成/権限設定/初期設定を行う。既存設定はON CONFLICT DO NOTHINGで保持、DROP/DELETEなし、Auth変更なし。ローカルDBへ2回適用し21テーブル/RLS有効を確認。本物のSupabaseには未適用。SQL Editorを開いてもらい、用意したSQL全体を渡すところが次のユーザー操作。
+
+### 専用Supabaseの初期SQL実行成功を受領（2026-11-28）
+
+ユーザーがsnsanalysisのSQL Editorへattachments/supabase-setup.sql全体を貼り付けRunし、Resultsに「初期設定が完了しました」のresult行が表示されたスクリーンショットを受領。画面末尾はCOMMITとSELECT。初期設定SQLの実行成功を確認したので、同じSQLの再実行は不要。Hyperdrive経由の実アプリ接続確認とは区別する。
+次はSupabase Authentication（左端の南京錠アイコン）を開いて、招待だけのログイン設定を案内。まだ公開サインアップ無効化・招待/SMTP・ログイン実テストは未確認。API/DBパスワードはチャットへ要求しない。
