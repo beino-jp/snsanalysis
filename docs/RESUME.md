@@ -237,3 +237,9 @@ SMTP SettingsはEnable custom SMTPオフをスクリーンショットで確認�
 
 型チェックとローカルDBを含む92テスト、Cloudflareビルド成功。ブラウザfixtureは5件成功：標準招待URLの転送/URL消去と不一致入力/API失敗時の再実行防止、設定成功後のログイン画面遷移、期限切れ、375px/1440pxで分析費用確認→開始→集計。Supabase認証応答・パスワード更新は単体テストで模擬し、実Supabase/SMTPは未使用。HTTPのno-store/no-referrerヘッダーと375pxのパスワード画面も確認。詳しい画面設定と実確認条件はdocs/AUTH-SETUP.md。
 次はSupabase Authentication → URL Configuration → Redirect URLsへ `https://test.beino-insight.com/auth/finish` を追加するよう案内（まだユーザーの完了報告なし）。その後、専用Workerの秘密設定/実DB接続・HTTPS配備を進める。公開・プラン変更・有料実分析・先方招待は未実施で、重要事項は確認する。
+
+### 戻り先URL登録を画面で確認（2026-11-28）
+
+ユーザーのスクリーンショットでRedirect URLsがTotal URLs:1、`https://test.beino-insight.com/auth/finish` と一致することを確認。追加は完了しているので繰り返し要求しない。
+次はCloudflare Workers & Pages → Create application → GitHub → beino-jp/snsanalysisを選び、新規Workerの設定画面へ進むよう案内。アプリ名beino-insight-test、対象ブランチcodex/prepare-live-validation、Build npm run build:cf、Deploy npm run check:cf && npx wrangler deploy。まだSave and Deployの許可・実行はしていない。公式のGit連携手順とビルド変数/実行時Secretsが別である点を確認し、docs/CLOUDFLARE-DEPLOY.mdに手順を整理した。
+実行環境statusを再確認：Cloudflare/Supabaseの秘密・実行時変数・外部認証の設定はない。ユーザーのMacブラウザへ接続する手段も未提供のまま。Cloudflare画面で直接設定してもらい、チャットへキーを送らせない。初回は非公開Workerの配置と認証接続確認、HTTPS公開・本人招待・有料分析はそれぞれ条件が揃ってから扱う。
