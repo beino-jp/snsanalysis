@@ -32,6 +32,8 @@ Cloudflare Worker → 設定 → ビルドのデプロイコマンドを上表�
 
 本物のCloudflare APIにアクセスしないローカルHTTP拒否サーバーと架空のトークンで、通常のdeployは同じHyperdriveエラー、config明示付きは自動委譲もHyperdriveエラーもなく、ローカル模擬APIのWorker情報取得まで進むことを確認した。実Cloudflareへの配置成功・DB接続成功はまだ未確認。権限の一括追加、DBパスワード再入力、localConnectionStringのコミットは不要。
 
+その後、ユーザーがCloudflare側のコマンドを修正して再試行し、ビルド#70fd5b0dが緑チェックで成功した画面を確認。初回配置は成功済み。実DB/認証の接続確認と公開は次の段階。
+
 ### 手動作成したAPIトークンが候補に出ない場合
 
 ユーザープロファイルでのAPIトークン作成と、Workers Buildsのビルドトークン登録は別。2026-11-29、専用トークンを手動作成後も、作成フォームの一覧にはhatching-lp build tokenと新規作成だけが表示されることを画面で確認した。同じ選択操作や無根拠な再読み込みを繰り返し要求しない。アプリ作成フォーム内の自動作成はR2/D1/全ゾーンのルート等も含むため、手動作成した権限を絞ったものを登録して使う。
@@ -72,7 +74,7 @@ Worker → Settings → Variables and Secretsで以下を設定する。ビル�
 | ALLOWED_EMAILS | まずユーザー本人のテスト用メールのみ |
 | ADMIN_EMAILS | 内部管理を許可する本人のメール |
 
-秘密はSecretとして登録し、値をチャットやスクリーンショットで要求しない。DB接続文字列・DBパスワードは既存Hyperdriveで管理するので、アプリ設定へ再入力しない。ResendのSMTPキーはSupabaseへ設定済みのものを使い、Workerへコピーしない。
+上表の5項目はSecretとして登録する。これにより、後続のWrangler配備で手入力の通常varsが削除されることも避ける。値をチャットやスクリーンショットで要求しない。DB接続文字列・DBパスワードは既存Hyperdriveで管理するので、アプリ設定へ再入力しない。ResendのSMTPキーはSupabaseへ設定済みのものを使い、Workerへコピーしない。
 
 認証の設定が揃うまでアプリは設定エラーとして拒否する。設定後、初期SQL適用済みのDBへHyperdrive経由で接続できることを実確認する。
 

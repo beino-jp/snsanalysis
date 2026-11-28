@@ -270,3 +270,9 @@ GitHubを確認：repoはPUBLIC、default branch main、PR#1 OPEN/MERGEABLE、�
 実ビルドは成功したが配置段階で`no local hyperdrive connection string`。原因はWrangler4.168.0のOpenNext自動委譲：configを明示しない非dry-run deployがopennextjs-cloudflare deployへ切り替わり、そのgetEnvFromPlatformProxyがローカルHyperdrive初期化を要求した。以前のdry-runはこの委譲をスキップするため再現していなかった。
 本物の外部APIを使わず、架空キー/アカウント＋ローカルHTTP403拒否サーバーで実CLIの2経路を比較。元のdeployは同じエラー、`deploy --config wrangler.json`は委譲なし/Hyperdriveエラーなしで模擬APIのWorker情報取得まで到達（API拒否で意図的に停止）。dummyキャッシュ構成なので、この明示設定でビルド済みentryを直接配置する。
 次のユーザー操作：beino-insight-test → 設定 → ビルド → デプロイコマンドを `npm run check:cf && npx wrangler deploy --config wrangler.json` に変更・保存し再試行。実Cloudflareへの配置成功・DB接続・Supabaseログインはまだ未確認。他の設定変更・パスワード要求・権限の一括追加はしない。再試行もprivate worker配置の同じ範囲なので再承認は不要。新たな契約/公開/有料分析の前は確認。
+
+### 2026-11-29 Cloudflareへの初回配置成功（最新）
+
+ユーザーが設定→ビルド構成の右側デプロイコマンドを明示config付きに変更して保存・再試行し、ビルド#70fd5b0dの緑チェックと「成功した」の報告を受領。main、専用beino-insight-test-build、Build npm run build:cf、Deploy npm run check:cf && npx wrangler deploy --config wrangler.json、Root /、NODE_VERSIONの設定を画面で確認。ログのNode24.22.3/npm10.9.2、npm監査0件も表示。初回の配置成功として扱い、同じコマンド修正やトークン作成を繰り返さない。追加契約/プラン変更は報告されていないが利用料ゼロとは断言しない。
+次はbeino-insight-testの設定→「変数とシークレット」→追加を開いてもらい、アプリ実行時のSUPABASE_URL / SUPABASE_ANON_KEY / SESSION_SECRET / ALLOWED_EMAILS / ADMIN_EMAILSをSecretとして登録する。ビルド設定にあるNODE_VERSIONとは別の領域。Secretにして後続のWrangler配備で手入力の通常varsが消えることを避ける。キー本体や署名鍵はチャット/スクリーンショットへ要求しない。まず空の追加画面を案内する。
+実DBへのSQL・実Supabase認証・SMTP配信・ユーザー招待・HTTPSドメイン公開・新しい有料分析は依然未確認/未実施。コードは公開ルートなしのまま。docs修正のPR#2はdraftで、mainへの反映は手動実行時Secrets設定中の自動再配備を避けて保留する。
