@@ -1,5 +1,23 @@
 # 招待ログインの設定と検証
 
+## 実配置後に設定・ログインが失敗した場合
+
+利用者画面のエラーだけでは原因を決めない。Cloudflareのbeino-insight-test → Observability → Logsで `AUTH_FLOW_FAILED` を検索し、アプリが出したJSONのoperation / stage / reasonだけを確認する。ログインの入力や招待トークン・Cookie・SQL・DB接続文字列を共有させない。原因が分かるまで招待メールの連続送信や同じパスワード設定リンクの再利用を要求しない。
+
+| stage | 確認する箇所 |
+| --- | --- |
+| configuration | 実行時設定の存在・書式。設定の値はチャットへ出さない |
+| origin | APP_ORIGINと実際のHTTPSアクセス先 |
+| input | リクエストの形式とパスワード条件 |
+| supabase_verify | 招待リンクの認証確認、専用プロジェクトURL・キーの対応 |
+| supabase_login | Supabase側でのパスワード認証、URL・キーの対応 |
+| invitation_access | 確認済みメールとALLOWED_EMAILSの照合 |
+| database_session | HyperdriveからのDB接続とsettingsへの読み書き。28P01はDB認証、42P01はテーブル、42501は権限を確認 |
+| password_update | Supabaseへのパスワード変更。成否不明の場合も自動再送しない |
+| session_cookie | アプリのセッション発行 |
+
+診断ログは固定のイベント・段階・許可済みコードだけを出す。例外本文、プロバイダー応答、メール、キー、パスワードは記録しない。Workers Logsはアプリログを有効化し、invocationログとtraceは無効、クエリ文字列は削除する。アカウント別の情報を画面のエラーへ追加しない。
+
 2026-11-28。専用Supabase `snsanalysis` と検証URL `https://test.beino-insight.com` を使う。既存サービスの認証・送信キーを流用しない。
 
 ## Supabaseの画面設定

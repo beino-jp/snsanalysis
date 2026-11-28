@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticate, cookieOptions, createSession, requireOrigin } from "@/server/auth";
 import { z } from "zod";
+import {authStep,reportAuthFailure} from '@/server/auth-diagnostics';
 const attempts = new Map<string, { n: number; at: number }>();
 export async function POST(req: NextRequest) {
   try {
-    await requireOrigin();
+    await authStep('origin',requireOrigin);
     const origin = req.headers.get("origin");
     if (!origin || new URL(origin).host !== req.headers.get("host"))
       return NextResponse.json(
@@ -29,10 +30,12 @@ export async function POST(req: NextRequest) {
       .parse(await req.json());
     const email = await authenticate(input.email, input.password);
     const res = NextResponse.json({ ok: true });
-    res.cookies.set("reach-session", await createSession(email), cookieOptions());
+    const session=await authStep('database_session',()=>createSession(email));
+    await authStep('session_cookie',()=>res.cookies.set("reach-session",session,cookieOptions()));
     attempts.delete(key);
     return res;
-  } catch {
+  } catch(error) {
+    reportAuthFailure('login',error);
     return NextResponse.json(
       {
         error:

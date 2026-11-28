@@ -294,3 +294,17 @@ Workerのドメイン画面は標準URL2つがオフ、Custom Domainなし。追
 次の自動配置でドメイン設定を維持するため、draftのPR#2へwrangler.jsonのcustom_domain test.beino-insight.comと厳密な許可ガードを準備。標準URLは無効のまま、空routes（初回非公開）も許容するが、親ホスト・wildcard・他ホスト・追加パラメータは拒否。設定／セッションアクセスの6テストとcheck:cfが成功した。mainへは未反映、公開変更は未実行。ユーザーへログイン画面が外部公開されることと許可アカウント限定であることを説明し、公開承認を得てから追加確定・main反映を進める。カスタムドメインのAPI権限不足は実エラーで必要範囲を確認し、黄色い一覧の一括付与はしない。
 
 明示configのWrangler dry-runも成功し、82静的ファイル・専用バインディングを含むパッケージ作成を確認。ホスト環境のグローバル設定ディレクトリ不足はXDG_CONFIG_HOMEとWRANGLER_LOG_PATHを/tmpの専用パスへ向けて解決した。実アップロード・ルート反映・認証接続の成功を示すものではない。PR#2は現範囲に合わせてタイトル／本文を更新、draftを維持。
+
+### 2026-11-29 検証ドメイン公開を承認、PR#2をmainへ反映（最新）
+
+ログイン画面のインターネット公開、許可アカウントだけが分析画面を使える範囲を説明した確認に、ユーザーが「はい」と回答。ドメイン追加の確定を案内した。再承認は不要。同じ承認範囲のPR#2をreadyにし、head 3dfe455のCI verify 2件がSUCCESSであることを確認、SHAを指定してsquash merge。GitHubでMERGED、main f7ad83d3c3d5efb7bd05932f0b4fd9792f01efc7を確認し、origin/mainとのツリー一致も確認した。main更新はCloudflare Git連携の自動配置対象だが、その実配置結果は未確認。
+
+続きの作業はorigin/mainから作ったcodex/public-login-verification。ユーザーのドメイン追加確定・DNS/TLS・実ログイン画面表示はまだ未確認。実行環境からのHTTPS確認はCONNECT proxy 403でHTTP応答に到達せず、アプリの403として扱わない。環境statusはnetwork unrestricted/enforcedであり、アプリの稼働／障害を判断する材料にはならない。ユーザー側でURLを開いた画面とCloudflareの配置結果を確認する。追加の契約・実メール招待送信・有料分析はまだ実行していない。
+
+### 2026-11-29 実招待メールからのパスワード設定失敗を調査（最新）
+
+ユーザー画面でtest.beino-insight.comのログイン画面表示を確認した。本人の手動操作でSupabase Users → Add user → Send invitationを案内し、招待メールからパスワード設定画面まで到達。その後「設定を完了できませんでした」、通常ログインも失敗した画面を受領。メール配信と公開HTTPS表示は確認できたが、パスワード設定・DB接続・ログイン成功は未確認。実行環境からもGET /loginがHTTP200となった（以前のCONNECT403は解消）。1Passwordの保存候補はアプリの認証成功を意味しない。
+
+原因を推測して秘密設定を入れ替えず、認証処理の段階を特定する診断を実装中。現コードは認証設定、Supabase認証、許可メール、DB接続の例外を全て同一画面メッセージへまとめており、サーバーログもなかった。固定AUTH_FLOW_FAILED / operation / stage / reasonのみを出し、例外本文・メール・パスワード・トークン・接続文字列を残さない。Workers Logsのアプリログを有効、invocationログ/traceを無効、URLクエリを削除する設定を準備した。画面の認証エラーは従来通りで情報を増やさない。実原因は診断後に特定する。
+
+公開済みのGET /api/healthを一度実行しHTTP200 / status okを確認。現行実配置での基本設定検証とHyperdrive経由のSELECT 1は成功している。settingsテーブルの読み書き・Supabase認証・パスワード更新の成功まで示すものではない。診断追加の13テスト・型チェック・check:cf・Cloudflare向けビルドは成功した。OpenNextビルド時のローカルWranglerログパス警告は配備/認証の原因ではなく、ビルド自体は完了。
