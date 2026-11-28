@@ -344,3 +344,11 @@ workerdの実fetchをローカル模擬サービスだけへ接続して比較�
 待機中に実データ用の公開仕様を読み取り確認した（取得実行・有料API呼び出しなし）。Apifyの公開Actorメタデータとlatestビルドに対し、既存validatePricing/validateBuildを適用。投稿apify/instagram-scraper（0.0.884）、コメントapify/instagram-comment-scraper（0.0.699）、プロフィールapify/instagram-profile-scraper（0.0.711）が全て通過した。課金イベントはresult、comment、profile/about-accountで既知仕様と一致。プロフィール追加About取得はfalseを維持する。これは公開仕様の確認時点の結果であり、実行時にも再検査・Build固定が必要。ユーザーの契約残高や実請求を確認したものではない。
 
 OpenAI公式モデル仕様 https://developers.openai.com/api/docs/models/gpt-4.1-mini で入力$0.40/出力$1.60（各100万tokens）の表示を確認。既存の価格ガードと一致するが、モデルはDeprecated表示。公式 https://developers.openai.com/api/docs/deprecations にはGPT-4.1 miniの停止日2027-01-14、推奨置換gpt-6-lunaが掲載されている。現日付2026-11-29では停止日前だが、長期提供前のモデル移行と費用・構造化出力の回帰検証が必要。キーのモデルアクセス権はまだ未確認。自動で別モデルへ切り替えたり、新モデルの料金を推定で設定したりしない。
+
+### 2026-11-29 実データ用APIキーの登録報告と少量検証の準備（最新）
+
+ユーザーがApify/OpenAI両方のキーを持っていると回答。Cloudflare → beino-insight-test → 設定 → ランタイム変数とシークレット、プロダクションにAPIFY_TOKEN / OPENAI_API_KEYをシークレットで登録するよう案内し、「登録できたよ」を受領。値は受領していない。実行スイッチはまだ有効化していない。
+
+次の対象について「前回送ったものでいい」と回答。公開ソースではなく既存のignored .live-test.local.jsonのpostUrlを読み、前回URLを確認できた。ユーザーにURLを再送させる必要はない。実URLや実データをこのメモ／GitHubへ追加しない。既存Macの分析済み結果は保存済みのまま、今回はクラウドの/analyze経路の小規模動作確認という目的・再取得範囲・費用を実行前に提示する。
+
+手入力を減らすため、月間API検証枠300円・既存モデルgpt-4.1-mini・入力0.4/出力1.6 USD per millionをwrangler.varsへ追加する準備を進める。ガードは現在の検証値と一致を検査し、キーやLIVE_ANALYSIS_ENABLEDのvars追加は拒否する。実行スイッチがない限り、キーが揃っていてもliveLimitsで無効になることをテストする。Secretでの有効化は対象／費用の確認後に扱う。
