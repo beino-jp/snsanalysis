@@ -320,3 +320,7 @@ Workerのドメイン画面は標準URL2つがオフ、Custom Domainなし。追
 ObservabilityのEventsメニューにLogsという項目があるとの案内は誤り。実際の候補はEvents / Invocations / Traces / Flamegraph / Visualizations。Eventsのまま右上を最後の24時間に変更・更新するとエラー1件が表示された。JST03:39:56の行を開いた画面でoperation=password_setup / stage=password_update / reason=UNCLASSIFIEDを確認。招待検証・許可メール・DBのセッション世代更新とリンク消費トランザクションは既に通っているので、それらを再設定させない。
 
 workerdの実fetchをローカル模擬サービスだけへ接続して比較すると、redirect:errorは「followまたはmanualのみ対応」というTypeErrorとなり、manualではHTTP200になることを再現。これが本番コードの失敗段階と一致した。通信処理をpassword-update.tsへ分離し、manualで送信／非2xxを拒否する修正を準備。Bearer・パスワードを転送先へ送らず、自動再試行しない。実ヘルパーをTypeScript変換してworkerdで実行する回帰テストを追加し、成功、302/307転送拒否、400/503失敗、各1リクエストを確認。Miniflareは既にWrangler依存の同一バージョンをテスト用の直接devDependencyとして明示（新規バージョン変更なし）。型チェックと関連16テスト成功。実際のSupabaseパスワード更新成功は修正配置後の本人確認が残る。
+
+修正PR#5 https://github.com/beino-jp/snsanalysis/pull/5 を作成・添付。Cloudflare向けビルドと明示configのWrangler dry-run成功。最終head d7dbf84のCI verify 2件がSUCCESSであることを確認し、SHA指定でsquash mergeした。mainは078a0a1cc147867584aee72688dbd1203679aa3f、承認対象headとのツリー一致も確認済み。続きはorigin/mainからcodex/verify-password-fixを作成した。自動Cloudflare配置の成功と実パスワード設定成功はまだ未確認。
+
+次はCloudflareの最新「Cloudflareで失敗するパスワード変更通信を修正 (#5)」が準備完了になってから、本人のSupabaseユーザー詳細 → Reset password → Send password recoveryで新しいメールを送り、その新リンクで一度だけ設定する。チャットに貼ったパスワードは再使用せず1Passwordで別のものを生成してもらう。元の招待や回復リンクを再利用しない。成功ならログアウト／再ログインと権限を確認、失敗なら新しいAUTH_FLOW_FAILEDのstage/reasonを確認する。外部への実メール送信やパスワード設定はユーザーが自分の画面で行い、こちらでは秘密値を受領・利用しない。
