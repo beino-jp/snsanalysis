@@ -58,7 +58,7 @@ Cloudflare公式の初回ブランチはrepo default branch（main）。今回�
 - 既存の専用Hyperdrive `beino-insight-test-db`（キャッシュ無効）
 - 日本時間09:00の日次保持期限処理
 
-wrangler.jsonはworkers_dev/preview_urlsがfalse、routesは空。最初の配置ではアプリの公開ドメインを設定しない。分析開始は既定無効で、Apify/OpenAIのキーも初回のログイン接続確認には不要。
+最初の配置はworkers_dev/preview_urlsがfalse、routesを空にして実施した。HTTPS接続準備の変更では、この2つの標準URLを無効のまま、routesに検証用のtest.beino-insight.comだけをcustom_domainとして指定する。分析開始は既定無効で、Apify/OpenAIのキーも初回のログイン接続確認には不要。
 
 WranglerによるWorkflow設定権限が不足している場合は、エラーに示される必要権限を確認する。別の契約・ストレージや広いAPIキーを代替として無条件に追加しない。
 
@@ -80,6 +80,10 @@ Worker → Settings → Variables and Secretsで以下を設定する。ビル�
 
 ## HTTPS接続と本人テスト
 
-上の設定が完了してから、ユーザーに `test.beino-insight.com` のログイン画面をネット上へ出す範囲を説明し、公開の確認を得る。許可メール以外は認証を拒否するが、ログイン画面自体は公開になる。DNS/Custom Domainの追加と、以降のWrangler配備で維持する設定変更を同時に扱う。現時点の設定ガードはroutes追加を拒否するため、確認後に検証ホストだけを許可する変更が必要。
+上の設定が完了してから、ユーザーに `test.beino-insight.com` のログイン画面をネット上へ出す範囲を説明し、公開の確認を得る。許可メール以外は認証を拒否するが、ログイン画面自体は公開になる。DNS/Custom Domainの追加と、以降のWrangler配備で維持する設定変更を同時に扱う。検証ホストだけを許可する設定とガード変更はdraftで準備し、公開承認後にmainへ反映する。wildcard、親ドメイン、他製品のドメインや標準URLは許可しない。
+
+Cloudflareの現在のUIでは、Worker → ドメイン → ドメインを追加でまずゾーン `beino-insight.com` を検索して選ぶ。ここへ完全なサブドメインを入れると「一致するゾーンがありません」となる。次画面でサブドメイン `test`、有効化対象「本番」を指定する（検証用Worker内の通常版を指す）。追加すると専用テストホストへ接続されるので、この確定前に公開範囲を説明する。アクティブな既存ゾーンの再オンボード・再購入は不要。
+
+自動配置のトークンにCustom Domain設定の権限が不足する場合は、APIエラーで必要な権限を確認し、専用ゾーンに限定して対応する。画面の不足権限一覧を一括追加しない。main反映後の自動配置成功とCustom Domainが残ることも確認する。
 
 実メールの招待は本人の明示された宛先・送信指示を得てから行い、AUTH-SETUP.mdのログイン試験を進める。新しい有料分析は開始しない。実API1本の試験は別途、対象投稿・最大件数・1回上限300円を提示して承認後に行う。
