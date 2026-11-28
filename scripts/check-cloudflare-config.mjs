@@ -5,6 +5,7 @@ export function checkCloudflareConfig(c){
  const allowed=new Set(['APP_ORIGIN','DEPLOY_TARGET','DATA_PROVIDER','LLM_PROVIDER','DEMO_AUTH']);
  if(Object.keys(c.vars??{}).some(k=>!allowed.has(k)))throw Error('秘密はvarsではなく専用環境のSecretsで設定してください');
  if(c.workflows?.some(w=>!((w.name==='beino-insight-test-analysis'&&w.binding==='ANALYSIS_WORKFLOW'&&w.class_name==='AnalysisWorkflow')||(w.name==='beino-insight-test-live-analysis'&&w.binding==='LIVE_ANALYSIS_WORKFLOW'&&w.class_name==='LiveAnalysisWorkflow'))))throw Error('専用の分析Workflow設定が必要です');
+ if(c.hyperdrive?.length!==1||c.hyperdrive[0].binding!=='HYPERDRIVE'||!(/^[a-f0-9]{32}$/i.test(c.hyperdrive[0].id))||Object.keys(c.hyperdrive[0]).some(k=>!['binding','id'].includes(k)))throw Error('専用HyperdriveのIDだけを設定してください。接続文字列・パスワードは保存しません');
  if(c.account_id||c.env)throw Error('他アカウント・既存環境への配備設定は使いません');
 }
 if(process.argv[1] && new URL(import.meta.url).pathname===process.argv[1]){

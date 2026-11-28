@@ -207,3 +207,10 @@ db/harden-access.sqlを追加しdb:setupへ接続。18アプリテーブルのRL
 - 次は実Supabase/Hyperdrive/Secretsの安全な設定、SDK更新後の実APIで1本検証（範囲・上限を提示して事前確認）、招待ログイン/実環境E2E。公開と追加課金は未実施。ブラウザ連携の追加スクリーンショット探しを再開しない。
 
 Supabaseの「snsanalysis」は今回のアプリ専用とのユーザー回答を受領。他サービスと共用ではない。接続操作はまだで、実際のキー/DB情報はクラウドにない。専用DBへの設定を案内するところから再開する。APIキー・DBパスワードをチャットに送らせない。
+
+## 2026-11-28 Hyperdrive接続構成をユーザーが作成
+
+ユーザーのCloudflare beinoアカウントで `beino-insight-test-db` を新規作成。Supabase専用snsanalysisのSession pooler、Postgres/5432/postgresを手動入力し、DBパスワードは本人が思い出してCloudflare画面へ直接入力。チャット・repoには受領/保存していない。設定画面の「この構成ではキャッシュが無効です」を確認済み。最大接続数は画面上60（soft limit）、まだ変更していない。
+接続方法wrangler.jsoncのスクリーンショットでHyperdrive ID `01a91508d92d4491aa2a72c17d6c96ca` とbinding HYPERDRIVEを確認し、wrangler.jsonに反映。IDは認証秘密ではない。接続文字列/ローカルDBパスワードはwrangler設定に含めず、ガードで禁止。
+Cloudflare設定作成は確認済みだが、アプリから本物のDBへのSQL実行は未確認。既存Worker/DNS/ルート変更・公開・有料取得はまだ。
+次はSupabase SQL Editorでアプリ初期設定を行う。`scripts/export-supabase-setup.ts` が既存schema+RLS+default設定をトランザクション付きの `attachments/supabase-setup.sql` にオフライン出力。専用DBだけで使い、21テーブル作成/権限設定/初期設定を行う。既存設定はON CONFLICT DO NOTHINGで保持、DROP/DELETEなし、Auth変更なし。ローカルDBへ2回適用し21テーブル/RLS有効を確認。本物のSupabaseには未適用。SQL Editorを開いてもらい、用意したSQL全体を渡すところが次のユーザー操作。

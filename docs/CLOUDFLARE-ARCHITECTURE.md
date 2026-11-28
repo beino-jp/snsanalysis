@@ -76,3 +76,8 @@ pg-cloudflareは接続終了後のソケットerrorを通知することがあ�
 `LiveAnalysisWorkflow` を専用名 `beino-insight-test-live-analysis` / binding `LIVE_ANALYSIS_WORKFLOW` で追加。内容はCLIENT-TEST.mdのURL分析節を参照。既定はLIVE_ANALYSIS_ENABLEDが未設定/falseで無効。月間API枠、開始意図、精算と集計の本人スコープをDBに保存する。日次Cron（00:00UTC/09:00JST）も用意したが未配備。
 
 ユーザーはSupabase「snsanalysis」が今回だけの専用プロジェクトであると回答済み。クラウド環境には外部サービスの秘密や接続情報がなく、ブラウザをユーザーMacに接続する機能も現在提供されていないため、実設定はユーザーの画面で案内する必要がある。
+
+### 2026-11-28 接続構成IDの反映
+
+ユーザーがCloudflareで専用 `beino-insight-test-db` を作成し、キャッシュ無効を画面で確認。表示された構成IDをwrangler.jsonのHYPERDRIVEへ反映した。DBパスワード/接続文字列はコードに含めない。実SQL接続は配備/秘密設定後の確認が必要。
+初期SQLは `npx tsx scripts/export-supabase-setup.ts` で `attachments/supabase-setup.sql` に生成可能。専用Supabase SQL Editorでの手動設定用。ローカルで2回適用し、既存データを削除せず21テーブルのRLSを保つことを確認。Supabaseへの適用自体はまだ。

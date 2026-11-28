@@ -42,5 +42,11 @@
     "crons": [
       "0 0 * * *"
     ]
-  }
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "01a91508d92d4491aa2a72c17d6c96ca"
+    }
+  ]
 }
